@@ -2,9 +2,9 @@
  *
  *   node tools/bundle.mjs
  *
- * Writes two artefacts from the same source:
- *   dist/index.html     a standalone page you can double-click or email
- *   dist/artifact.html  body-only, for hosts that supply their own <head>
+ * Writes dist/index.html: a standalone page with no external dependency except
+ * the webfonts, which fall back cleanly offline. Double-click it, put it on a
+ * USB stick, attach it to an email.
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -28,19 +28,4 @@ html = html.replace(
 mkdirSync(resolve(root, 'dist'), { recursive: true });
 writeFileSync(resolve(root, 'dist/index.html'), html);
 
-// The artifact host wraps the file in its own document skeleton, so hand it the
-// contents of <head> and <body> with the document furniture removed.
-const artifact = html
-  .replace(/^[\s\S]*?<head>\s*/i, '')
-  .replace(/\s*<\/head>\s*<body>\s*/i, '\n\n')
-  .replace(/\s*<\/body>\s*<\/html>\s*$/i, '\n')
-  .replace(/^\s*<meta charset="utf-8">\s*$/im, '')
-  .replace(/^\s*<meta name="viewport"[^>]*>\s*$/im, '')
-  .replace(/\n{3,}/g, '\n\n')
-  .trimStart();
-
-writeFileSync(resolve(root, 'dist/artifact.html'), artifact);
-
-const kb = s => (Buffer.byteLength(s) / 1024).toFixed(0) + ' kB';
-console.log('dist/index.html    ' + kb(html));
-console.log('dist/artifact.html ' + kb(artifact));
+console.log('dist/index.html  ' + (Buffer.byteLength(html) / 1024).toFixed(0) + ' kB');
