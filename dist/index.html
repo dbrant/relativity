@@ -182,7 +182,7 @@ button {
   left: var(--pad);
   bottom: var(--pad);
   padding: 12px 16px 13px;
-  min-width: 232px;
+  min-width: 252px;
 }
 
 #kinematics .big {
@@ -193,7 +193,7 @@ button {
 }
 
 #kinematics .big span:first-child {
-  font-size: 40px;
+  font-size: 34px;
   font-weight: 500;
   line-height: 0.95;
   letter-spacing: -0.02em;
@@ -588,7 +588,7 @@ legend { padding: 0 0 8px; }
 
 @media (max-width: 720px) {
   #kinematics, #clocks { min-width: 0; padding: 9px 12px 10px; }
-  #kinematics .big span:first-child { font-size: 29px; }
+  #kinematics .big span:first-child { font-size: 26px; }
   #masthead p, #hint { display: none; }
   #spectrum-wrap { width: 200px; }
 }
@@ -743,13 +743,19 @@ legend { padding: 0 0 8px; }
     to starlight, just with <b>c</b> turned down to walking pace so you can outrun it.
   </p>
 
+  <p>
+    Nothing here rubs. Let go of the keys and you keep every scrap of velocity you
+    built up, so you can settle at &beta; = 0.99 and take as long as you like
+    looking around from there. <b>Space</b> is the brake.
+  </p>
+
   <h3>Controls</h3>
   <div id="keys">
     <div class="keyrow"><kbd>W A S D</kbd><span>walk</span></div>
     <div class="keyrow"><kbd>&uarr; &darr; &larr; &rarr;</kbd><span>walk</span></div>
     <div class="keyrow"><kbd>Mouse</kbd><span>look around</span></div>
     <div class="keyrow"><kbd>Shift</kbd><span>sprint</span></div>
-    <div class="keyrow"><kbd>Space</kbd><span>brake hard</span></div>
+    <div class="keyrow"><kbd>Space</kbd><span>brake &mdash; nothing else slows you</span></div>
     <div class="keyrow"><kbd>Q</kbd> <span>drop / <kbd>E</kbd> rise</span></div>
     <div class="keyrow"><kbd>G</kbd><span>relativity on / off</span></div>
     <div class="keyrow"><kbd>R</kbd><span>return to the start</span></div>
@@ -1764,7 +1770,6 @@ void main() {
 
   const ACCEL = 1.25;            // proper acceleration, in rapidity per second
   const SPRINT = 3.0;
-  const COAST_DECAY = 1.15;      // rapidity shed per second when you let go
   const BRAKE_DECAY = 6.0;
   const BETA_MAX = 0.99999;
   const EYE_MIN = 0.6, EYE_MAX = 400;
@@ -1914,9 +1919,10 @@ void main() {
     } else if (dl > 1e-6) {
       const a = ACCEL * (keys.sprint ? SPRINT : 1) * dt;
       S.vel = addVelocity(S.vel, [d[0] / dl * a * c, d[1] / dl * a * c, d[2] / dl * a * c], c);
-    } else {
-      S.vel = shedRapidity(S.vel, COAST_DECAY * dt, c);
     }
+    // No drag term: let go and you keep the velocity you built up. Space is
+    // the only way back down, which is also the only honest option — there is
+    // nothing here to rub against.
 
     let sp = len(S.vel);
     if (sp > BETA_MAX * c) {
@@ -2132,7 +2138,7 @@ void main() {
   function updateHud(kin, view) {
     const b = kin.beta, g = kin.gamma;
 
-    hud.speed.textContent = (kin.speed * 3.6).toFixed(2);
+    hud.speed.textContent = (kin.speed * 3.6).toFixed(5);
     hud.beta.textContent = b < 0.999 ? b.toFixed(4) : b.toFixed(6);
     hud.gamma.textContent = g < 100 ? g.toFixed(3) : g.toFixed(0);
     hud.contract.textContent = '× ' + (1 / g).toFixed(4);
@@ -2154,7 +2160,7 @@ void main() {
 
     // The bar is drawn in rapidity, so equal effort reads as equal progress.
     const phi = Math.atanh(Math.min(b, 0.999999));
-    hud.rapid.style.width = Math.min(100, (phi / 5.0) * 100).toFixed(1) + '%';
+    hud.rapid.style.width = Math.min(100, (phi / 6.1) * 100).toFixed(1) + '%';
   }
 
   // --------------------------------------------------------------- UI wiring

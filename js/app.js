@@ -27,7 +27,6 @@
 
   const ACCEL = 1.25;            // proper acceleration, in rapidity per second
   const SPRINT = 3.0;
-  const COAST_DECAY = 1.15;      // rapidity shed per second when you let go
   const BRAKE_DECAY = 6.0;
   const BETA_MAX = 0.99999;
   const EYE_MIN = 0.6, EYE_MAX = 400;
@@ -177,9 +176,10 @@
     } else if (dl > 1e-6) {
       const a = ACCEL * (keys.sprint ? SPRINT : 1) * dt;
       S.vel = addVelocity(S.vel, [d[0] / dl * a * c, d[1] / dl * a * c, d[2] / dl * a * c], c);
-    } else {
-      S.vel = shedRapidity(S.vel, COAST_DECAY * dt, c);
     }
+    // No drag term: let go and you keep the velocity you built up. Space is
+    // the only way back down, which is also the only honest option — there is
+    // nothing here to rub against.
 
     let sp = len(S.vel);
     if (sp > BETA_MAX * c) {
@@ -395,7 +395,7 @@
   function updateHud(kin, view) {
     const b = kin.beta, g = kin.gamma;
 
-    hud.speed.textContent = (kin.speed * 3.6).toFixed(2);
+    hud.speed.textContent = (kin.speed * 3.6).toFixed(5);
     hud.beta.textContent = b < 0.999 ? b.toFixed(4) : b.toFixed(6);
     hud.gamma.textContent = g < 100 ? g.toFixed(3) : g.toFixed(0);
     hud.contract.textContent = '× ' + (1 / g).toFixed(4);
@@ -417,7 +417,7 @@
 
     // The bar is drawn in rapidity, so equal effort reads as equal progress.
     const phi = Math.atanh(Math.min(b, 0.999999));
-    hud.rapid.style.width = Math.min(100, (phi / 5.0) * 100).toFixed(1) + '%';
+    hud.rapid.style.width = Math.min(100, (phi / 6.1) * 100).toFixed(1) + '%';
   }
 
   // --------------------------------------------------------------- UI wiring

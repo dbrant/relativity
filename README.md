@@ -52,7 +52,9 @@ moves the overall level only; the front-to-back gradient within the frame is
 untouched. Turn it off in Settings to see the raw law.
 
 Your own motion integrates through Einstein velocity addition, so holding the key
-down adds *rapidity* linearly and you approach `c` without ever arriving.
+down adds *rapidity* linearly and you approach `c` without ever arriving — the
+velocity readout carries five decimals so you can watch 4.99995 km/h refuse to
+become 5. There is no drag term: release the keys and you coast.
 
 ## Deliberate choices
 
@@ -79,7 +81,8 @@ down adds *rapidity* linearly and you approach `c` without ever arriving.
 
 ## Controls
 
-`W A S D` or arrows walk · mouse looks · `Shift` sprints · `Space` brakes ·
+`W A S D` or arrows walk · mouse looks · `Shift` sprints · `Space` brakes (nothing
+else slows you — you coast) ·
 `Q`/`E` drop and rise · `G` toggles relativity off and back on · `R` resets ·
 `Tab` settings · `H` field guide.
 
