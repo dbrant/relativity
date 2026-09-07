@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Walking Speed of Light</title>
+<meta name="description" content="A special relativity simulator in which light crawls along at 5 km/h, so Lorentz contraction, aberration and Doppler shift happen at walking pace.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@400;500&family=Saira+Condensed:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="view"></canvas>
+<div id="scrim" aria-hidden="true"></div>
+
+<header class="hud" id="masthead">
+  <h1>Walking Speed of Light</h1>
+  <p>Special relativity with <b>c = 5 km/h</b></p>
+</header>
+
+<nav class="hud" id="tools">
+  <button type="button" id="open-help">Field guide <kbd>H</kbd></button>
+  <button type="button" id="open-panel">Settings <kbd>Tab</kbd></button>
+</nav>
+
+<section class="hud panel" id="kinematics" aria-label="Motion readout">
+  <p class="eyebrow">Your velocity</p>
+  <div class="big"><span id="v-speed">0.00</span><span>km/h</span></div>
+  <dl class="rows">
+    <div class="row"><dt>&beta; &nbsp;v / c</dt><dd id="v-beta">0.0000</dd></div>
+    <div class="row"><dt>&gamma; &nbsp;Lorentz factor</dt><dd id="v-gamma">1.000</dd></div>
+    <div class="row"><dt>Lengths ahead</dt><dd id="v-contract">&times; 1.0000</dd></div>
+  </dl>
+  <div id="rapidity" aria-hidden="true"><i id="v-rapid"></i></div>
+</section>
+
+<section class="hud panel" id="clocks" aria-label="Clocks">
+  <p class="eyebrow">Elapsed</p>
+  <dl>
+    <div class="clock"><dt class="eyebrow">Your watch</dt><dd id="v-tau">0:00.0</dd></div>
+    <div class="clock is-world"><dt class="eyebrow">World clock</dt><dd id="v-tworld">0:00.0</dd></div>
+  </dl>
+  <footer>World clocks tick <b id="v-rate">&times; 1.000</b> faster than yours.</footer>
+</section>
+
+<div class="hud" id="reticle" aria-hidden="true">
+  <div class="cross"></div>
+  <div id="gauge">
+    <div id="spectrum-wrap">
+      <div id="spectrum"></div>
+      <div id="rest-tick"></div>
+      <div id="marker"></div>
+    </div>
+    <p class="caption">
+      <span>Doppler at the crosshair</span>
+      <b id="v-dop">1.000</b>
+      <span id="v-dopword">at rest</span>
+    </p>
+  </div>
+</div>
+
+<div class="hud" id="galilean">Relativity off &mdash; Galilean view</div>
+
+<p class="hud" id="hint">
+  <span><em>W A S D</em> walk</span>
+  <span><em>Mouse</em> look</span>
+  <span><em>Shift</em> sprint</span>
+  <span><em>Space</em> brake</span>
+  <span><em>G</em> relativity on / off</span>
+  <span><em>R</em> reset</span>
+</p>
+
+<div id="overlay">
+  <div class="card">
+    <h2 id="overlay-title">Light is slow here</h2>
+    <p id="overlay-body">
+      In this park the speed of light is 5 kilometres an hour &mdash; a brisk walk.
+      Break into a run and the world in front of you crowds together and turns blue,
+      the world behind you reddens and falls away, and your watch starts losing
+      time against the clocks around you.
+    </p>
+    <p class="cue">Click to look around</p>
+  </div>
+</div>
+
+<aside id="panel" aria-label="Settings">
+  <div class="drawer-head">
+    <h2>Settings</h2>
+    <button type="button" id="panel-close" aria-label="Close settings">&times;</button>
+  </div>
+
+  <fieldset>
+    <legend class="eyebrow">Effects</legend>
+    <label class="check">
+      <input type="checkbox" id="fx-delay" checked>
+      <span>Light-travel delay
+        <small>You see each object where and when its light left it.</small></span>
+    </label>
+    <label class="check">
+      <input type="checkbox" id="fx-aberr" checked>
+      <span>Aberration &amp; contraction
+        <small>The Lorentz boost of apparent position. Terrell rotation comes with it.</small></span>
+    </label>
+    <label class="check">
+      <input type="checkbox" id="fx-doppler" checked>
+      <span>Doppler colour
+        <small>Spectra shifted, then re-matched through the CIE observer.</small></span>
+    </label>
+    <label class="check">
+      <input type="checkbox" id="fx-beam" checked>
+      <span>Relativistic beaming
+        <small>Light piles up ahead of you and thins out behind.</small></span>
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend class=eyebrow>World</legend>
+    <label class=check>
+      <input type=checkbox id=opt-eye checked>
+      <span>Eye adaptation
+        <small>Your retina adjusts to the average brightness ahead, so beaming reads as a gradient across the view instead of a white-out.</small></span>
+    </label>
+    <div class=slider>
+      <div class=top><label for=opt-c>Speed of light</label><output id="opt-c-out">5.0 km/h</output></div>
+      <input type="range" id="opt-c" min="1" max="40" step="0.5" value="5">
+    </div>
+    <div class="slider">
+      <div class="top"><label for="opt-beam">Beaming exponent</label><output id="opt-beam-out">D^4.0</output></div>
+      <input type="range" id="opt-beam" min="0" max="4" step="0.1" value="4">
+    </div>
+    <div class="slider">
+      <div class="top"><label for="opt-exposure">Exposure</label><output id="opt-exposure-out">1.00</output></div>
+      <input type="range" id="opt-exposure" min="0.2" max="2.5" step="0.05" value="1">
+    </div>
+    <div class="slider">
+      <div class="top"><label for="opt-res">Render scale</label><output id="opt-res-out">100%</output></div>
+      <input type="range" id="opt-res" min="0.4" max="1" step="0.05" value="1">
+    </div>
+  </fieldset>
+
+  <footer><span><span id="v-fps">&mdash;</span> fps</span><span><span id="v-verts">&mdash;</span> vertices</span></footer>
+</aside>
+
+<aside id="help" aria-label="Field guide">
+  <div class="drawer-head">
+    <h2>Field guide</h2>
+    <button type="button" id="help-close" aria-label="Close field guide">&times;</button>
+  </div>
+
+  <p>
+    Everything you see is computed by tracing light back down your past light cone
+    and boosting it into your moving frame &mdash; the same arithmetic that applies
+    to starlight, just with <b>c</b> turned down to walking pace so you can outrun it.
+  </p>
+
+  <h3>Controls</h3>
+  <div id="keys">
+    <div class="keyrow"><kbd>W A S D</kbd><span>walk</span></div>
+    <div class="keyrow"><kbd>&uarr; &darr; &larr; &rarr;</kbd><span>walk</span></div>
+    <div class="keyrow"><kbd>Mouse</kbd><span>look around</span></div>
+    <div class="keyrow"><kbd>Shift</kbd><span>sprint</span></div>
+    <div class="keyrow"><kbd>Space</kbd><span>brake hard</span></div>
+    <div class="keyrow"><kbd>Q</kbd> <span>drop / <kbd>E</kbd> rise</span></div>
+    <div class="keyrow"><kbd>G</kbd><span>relativity on / off</span></div>
+    <div class="keyrow"><kbd>R</kbd><span>return to the start</span></div>
+    <div class="keyrow"><kbd>Tab</kbd><span>settings</span></div>
+    <div class="keyrow"><kbd>Esc</kbd><span>release the mouse</span></div>
+  </div>
+
+  <h3>Things worth trying</h3>
+  <ul>
+    <li>
+      Two <b>surveyor's staves</b> lie in the park, both 60 m, banded every 2 m.
+      One runs along the corridor, one across it. Sprint down the corridor and
+      count the bands: only the stave lying along your path loses any.
+    </li>
+    <li>
+      Run hard and look behind you. The entire world astern collapses into a
+      small, dim, red disc &mdash; <b>aberration</b> sweeps almost the whole sky
+      into the direction you are travelling.
+    </li>
+    <li>
+      The <b>beacons</b> all flash once per second of world time. Walk toward one
+      and it hurries; walk away and it dawdles. That is the Doppler shift you can
+      count on your fingers.
+    </li>
+    <li>
+      Stand still and watch the <b>shuttle</b> run back and forth. It is genuinely
+      shorter when it is moving fastest &mdash; and because light from its far end
+      left earlier than light from its near end, it also looks turned. That
+      apparent twist is <b>Terrell rotation</b>.
+    </li>
+    <li>
+The <b>carousel</b> cars are contracted by their own motion, and you see each
+      one at a different moment in its trip around the ring. The half of the ring
+      running away from you is beamed almost to black while the half coming toward
+      you flares — the searchlight effect, on a fairground ride.
+    </li>
+    <li>
+      Press <b>G</b> at speed to drop back to a Galilean view. Whatever changes
+      when you do is exactly the relativity.
+    </li>
+    <li>
+      Let the clocks run apart, then hit <b>R</b>. Your watch is the one that
+      falls behind &mdash; every second of yours is &gamma; seconds of theirs.
+    </li>
+  </ul>
+
+  <h3>What is being approximated</h3>
+  <p>
+    The Doppler shift is real spectral work: each surface colour is treated as a
+    reflectance spectrum under a 5800 K sun, shifted by the Doppler factor, and
+    re-integrated against the CIE 1931 colour matching functions. Objects fade to
+    black at extreme speed because the sun has no light left to give at those
+    wavelengths. Beaming uses the bolometric <b>D&#8308;</b>; the tone mapping
+    afterwards is a film curve, not physics.
+  </p>
+</aside>
+
+<script src="js/glutil.js"></script>
+<script src="js/color.js"></script>
+<script src="js/geometry.js"></script>
+<script src="js/shaders.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
