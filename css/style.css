@@ -413,6 +413,13 @@ button {
 
 #overlay.is-hidden { opacity: 0; pointer-events: none; }
 
+/* Returning after Esc: a resume prompt, not the introduction again. It sits
+   above centre so it never covers the Doppler gauge under the crosshair. */
+#overlay.is-paused .card { padding: 17px 26px 15px; transform: translateY(-104px); }
+#overlay.is-paused h2 { font-size: 15px; margin-bottom: 0; }
+#overlay.is-paused #overlay-body { display: none; }
+#overlay.is-paused .cue { margin-top: 11px; }
+
 #overlay .card {
   max-width: 400px;
   padding: 26px 30px 24px;
@@ -454,7 +461,7 @@ button {
 
 #panel, #help {
   position: fixed;
-  z-index: 8;
+  z-index: 10;   /* reachable over the intro card */
   background: var(--panel-solid);
   border: 1px solid var(--edge-bright);
   border-radius: var(--radius);

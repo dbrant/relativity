@@ -424,6 +424,13 @@ button {
 
 #overlay.is-hidden { opacity: 0; pointer-events: none; }
 
+/* Returning after Esc: a resume prompt, not the introduction again. It sits
+   above centre so it never covers the Doppler gauge under the crosshair. */
+#overlay.is-paused .card { padding: 17px 26px 15px; transform: translateY(-104px); }
+#overlay.is-paused h2 { font-size: 15px; margin-bottom: 0; }
+#overlay.is-paused #overlay-body { display: none; }
+#overlay.is-paused .cue { margin-top: 11px; }
+
 #overlay .card {
   max-width: 400px;
   padding: 26px 30px 24px;
@@ -465,7 +472,7 @@ button {
 
 #panel, #help {
   position: fixed;
-  z-index: 8;
+  z-index: 10;   /* reachable over the intro card */
   background: var(--panel-solid);
   border: 1px solid var(--edge-bright);
   border-radius: var(--radius);
@@ -662,7 +669,7 @@ legend { padding: 0 0 8px; }
       the world behind you reddens and falls away, and your watch starts losing
       time against the clocks around you.
     </p>
-    <p class="cue">Click to look around</p>
+    <p class="cue" id="overlay-cue">Click to look around</p>
   </div>
 </div>
 
@@ -1746,6 +1753,7 @@ void main() {
     fx: { delay: true, aberr: true, doppler: true, beam: true },
     beamExp: 4.0,
     exposure: 1.0,
+    started: false,
     eyeAdapt: true,
     adapt: 1.0,                  // current state of the observer's eye
     resScale: 1.0,
@@ -1816,24 +1824,51 @@ void main() {
   let canvas, glc, hud;
 
   function setupInput() {
+    /* Getting in is deliberately NOT conditional on pointer lock succeeding.
+     * Some browsers and embedding contexts refuse the lock, and tying the
+     * overlay to it would leave you staring at an undismissable card. */
+    const begin = () => {
+      S.started = true;
+      hud.overlay.classList.add('is-hidden');
+      hud.hint.classList.remove('is-faded');
+      if (!document.pointerLockElement && canvas.requestPointerLock) {
+        const req = canvas.requestPointerLock();
+        if (req && req.catch) req.catch(() => {});   // fall back to drag-to-look
+      }
+    };
+    const overlayUp = () => !hud.overlay.classList.contains('is-hidden');
+
     addEventListener('keydown', e => {
+      if (e.code === 'Escape') { return; }           // the browser releases the lock
       if (e.code === 'Tab') { e.preventDefault(); togglePanel(); return; }
       if (e.code === 'KeyG') { toggleRelativity(); return; }
       if (e.code === 'KeyR') { resetObserver(); return; }
       if (e.code === 'KeyH') { toggleHelp(); return; }
       const a = CODE[e.code];
-      if (a) { keys[a] = true; e.preventDefault(); }
+      if (a) {
+        if (overlayUp()) begin();                    // just walking gets you in
+        keys[a] = true;
+        e.preventDefault();
+      }
     });
     addEventListener('keyup', e => { const a = CODE[e.code]; if (a) keys[a] = false; });
     addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 
-    canvas.addEventListener('click', () => {
-      if (!document.pointerLockElement) canvas.requestPointerLock();
-    });
+    hud.overlay.addEventListener('click', begin);
+    canvas.addEventListener('click', begin);
+
     document.addEventListener('pointerlockchange', () => {
-      const locked = document.pointerLockElement === canvas;
-      hud.overlay.classList.toggle('is-hidden', locked);
-      if (locked) hud.hint.classList.remove('is-faded');
+      if (document.pointerLockElement === canvas) {
+        hud.overlay.classList.add('is-hidden');
+        hud.hint.classList.remove('is-faded');
+      } else if (S.started) {
+        // Esc gave the mouse back. Return as a small resume prompt rather than
+        // replaying the introduction.
+        hud.overlay.classList.remove('is-hidden');
+        hud.overlay.classList.add('is-paused');
+        hud.overlayTitle.textContent = 'Paused';
+        hud.overlayCue.textContent = 'Click to resume';
+      }
     });
 
     const look = (dx, dy) => {
@@ -2183,6 +2218,8 @@ void main() {
     canvas = document.getElementById('view');
     hud = {
       overlay: document.getElementById('overlay'),
+      overlayTitle: document.getElementById('overlay-title'),
+      overlayCue: document.getElementById('overlay-cue'),
       hint: document.getElementById('hint'),
       panel: document.getElementById('panel'),
       help: document.getElementById('help'),

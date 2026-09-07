@@ -16,6 +16,7 @@
     fx: { delay: true, aberr: true, doppler: true, beam: true },
     beamExp: 4.0,
     exposure: 1.0,
+    started: false,
     eyeAdapt: true,
     adapt: 1.0,                  // current state of the observer's eye
     resScale: 1.0,
@@ -86,24 +87,51 @@
   let canvas, glc, hud;
 
   function setupInput() {
+    /* Getting in is deliberately NOT conditional on pointer lock succeeding.
+     * Some browsers and embedding contexts refuse the lock, and tying the
+     * overlay to it would leave you staring at an undismissable card. */
+    const begin = () => {
+      S.started = true;
+      hud.overlay.classList.add('is-hidden');
+      hud.hint.classList.remove('is-faded');
+      if (!document.pointerLockElement && canvas.requestPointerLock) {
+        const req = canvas.requestPointerLock();
+        if (req && req.catch) req.catch(() => {});   // fall back to drag-to-look
+      }
+    };
+    const overlayUp = () => !hud.overlay.classList.contains('is-hidden');
+
     addEventListener('keydown', e => {
+      if (e.code === 'Escape') { return; }           // the browser releases the lock
       if (e.code === 'Tab') { e.preventDefault(); togglePanel(); return; }
       if (e.code === 'KeyG') { toggleRelativity(); return; }
       if (e.code === 'KeyR') { resetObserver(); return; }
       if (e.code === 'KeyH') { toggleHelp(); return; }
       const a = CODE[e.code];
-      if (a) { keys[a] = true; e.preventDefault(); }
+      if (a) {
+        if (overlayUp()) begin();                    // just walking gets you in
+        keys[a] = true;
+        e.preventDefault();
+      }
     });
     addEventListener('keyup', e => { const a = CODE[e.code]; if (a) keys[a] = false; });
     addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 
-    canvas.addEventListener('click', () => {
-      if (!document.pointerLockElement) canvas.requestPointerLock();
-    });
+    hud.overlay.addEventListener('click', begin);
+    canvas.addEventListener('click', begin);
+
     document.addEventListener('pointerlockchange', () => {
-      const locked = document.pointerLockElement === canvas;
-      hud.overlay.classList.toggle('is-hidden', locked);
-      if (locked) hud.hint.classList.remove('is-faded');
+      if (document.pointerLockElement === canvas) {
+        hud.overlay.classList.add('is-hidden');
+        hud.hint.classList.remove('is-faded');
+      } else if (S.started) {
+        // Esc gave the mouse back. Return as a small resume prompt rather than
+        // replaying the introduction.
+        hud.overlay.classList.remove('is-hidden');
+        hud.overlay.classList.add('is-paused');
+        hud.overlayTitle.textContent = 'Paused';
+        hud.overlayCue.textContent = 'Click to resume';
+      }
     });
 
     const look = (dx, dy) => {
@@ -453,6 +481,8 @@
     canvas = document.getElementById('view');
     hud = {
       overlay: document.getElementById('overlay'),
+      overlayTitle: document.getElementById('overlay-title'),
+      overlayCue: document.getElementById('overlay-cue'),
       hint: document.getElementById('hint'),
       panel: document.getElementById('panel'),
       help: document.getElementById('help'),
