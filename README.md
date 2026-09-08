@@ -67,8 +67,8 @@ become 5. There is no drag term: release the keys and you coast.
   the faceting error goes as the square of the angular step. It is a polar disc
   graded exponentially from 1.2 m to 4 km, tessellated so the quads stay square
   (the radial step used to be 1.8x the tangential one, and that was where the
-  facets came from).  in Settings swaps the mesh live, from 33k
-  vertices to 474k.
+  facets came from). `Ground detail` in Settings swaps the mesh live, from 33k
+  vertices at Low to 474k at Very high.
 - **Backface culling is off.** Terrell rotation shows you faces that are pointing
   away from you; culling them would delete the effect.
 - **Logarithmic depth.** The apparent scene spans centimetres to tens of
