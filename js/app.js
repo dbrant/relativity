@@ -17,7 +17,9 @@
     beamExp: 4.0,
     exposure: 1.0,
     started: false,
-    groundDetail: 2,
+    groundDetail: 2,        // the floor the user chooses
+    groundActive: 2,        // what is actually drawn right now
+    groundAdaptive: true,
     eyeAdapt: true,
     adapt: 1.0,                  // current state of the observer's eye
     resScale: 1.0,
@@ -230,7 +232,8 @@
     R3.progShuttle = GL.program(g, variant(SH.VERT, '#define MOTION 2\n'), SH.FRAG_WORLD, 'shuttle');
 
     R3.mWorld = GL.uploadMesh(g, R3.progWorld, SCENE.buildStatic());
-    R3.mGround = GL.uploadMesh(g, R3.progWorld, SCENE.buildGround(S.groundDetail));
+    R3.groundCache = [];
+    R3.mGround = groundMesh(S.groundDetail);
     R3.mSky = GL.uploadMesh(g, R3.progSky, SCENE.buildSky());
     R3.mCar = GL.uploadMesh(g, R3.progCar, SCENE.buildCarousel());
     R3.mShuttle = GL.uploadMesh(g, R3.progShuttle, SCENE.buildShuttle());
@@ -251,15 +254,32 @@
       .reduce((n, m) => n + (m ? m.verts : 0), 0);
   }
 
-  /* Swapping ground tessellation means replacing one VBO, not reloading. */
-  function setGroundDetail(level) {
-    level = Math.max(0, Math.min(SCENE.GROUND_LEVELS.length - 1, Math.round(level)));
-    if (R3.mGround && level === S.groundDetail) return;
-    S.groundDetail = level;
-    GL.disposeMesh(glc, R3.mGround);
-    R3.mGround = GL.uploadMesh(glc, R3.progWorld, SCENE.buildGround(level));
+  /* Levels are built once and kept. Rebuilding a 650k-vertex disc costs a few
+   * hundred milliseconds, which would be a visible hitch every time you crossed
+   * a threshold — and you cross them while accelerating, when it shows most. */
+  function groundMesh(level) {
+    if (!R3.groundCache[level]) {
+      R3.groundCache[level] = GL.uploadMesh(glc, R3.progWorld, SCENE.buildGround(level));
+    }
+    return R3.groundCache[level];
+  }
+
+  function useGroundLevel(level) {
+    if (level === S.groundActive && R3.mGround) return;
+    S.groundActive = level;
+    R3.mGround = groundMesh(level);
     const el = document.getElementById('v-verts');
     if (el) el.textContent = (totalVerts() / 1000).toFixed(0) + 'k';
+    const note = document.getElementById('opt-ground-now');
+    if (note) {
+      note.textContent = level === S.groundDetail
+        ? '' : 'raised to ' + SCENE.GROUND_LEVELS[level].label + ' by your speed';
+    }
+  }
+
+  function setGroundFloor(level) {
+    S.groundDetail = Math.max(0, Math.min(SCENE.GROUND_LEVELS.length - 1, Math.round(level)));
+    useGroundLevel(Math.max(S.groundDetail, S.groundAdaptive ? S.groundActive : 0));
   }
 
   function resize() {
@@ -285,6 +305,7 @@
     g.uniform1f(u.uLogDepthC, LOG_DEPTH_C);
     g.uniform1f(u.uUseDelay, S.fx.delay ? 1 : 0);
     g.uniform1f(u.uUseAberr, S.fx.aberr ? 1 : 0);
+    g.uniform3f(u.uOffset, 0, 0, 0);
 
     g.uniform3fv(u.uSunDir, SUN);
     g.uniform3fv(u.uSunTint, SKY.sun);
@@ -349,7 +370,14 @@
 
     setCommon(R3.progWorld, kin, bd);
     drawMesh(R3.mWorld);
+
+    // The ground is a tessellation carrier, not scenery: its grid and mottle
+    // are computed from world coordinates in the fragment shader, so sliding
+    // the mesh along with the eye is invisible — and it keeps the finest
+    // rings underfoot however far you have walked from the origin.
+    g.uniform3f(R3.progWorld.u.uOffset, S.pos[0], 0, S.pos[2]);
     drawMesh(R3.mGround);
+    g.uniform3f(R3.progWorld.u.uOffset, 0, 0, 0);
 
     const K = SCENE.CAROUSEL;
     const carOmega = (K.beta * S.c) / K.radius;
@@ -476,7 +504,11 @@
     slider('opt-exposure', 'opt-exposure-out', v => { S.exposure = v; }, v => v.toFixed(2));
     slider('opt-beam', 'opt-beam-out', v => { S.beamExp = v; }, v => 'D^' + v.toFixed(1));
     slider('opt-res', 'opt-res-out', v => { S.resScale = v; }, v => Math.round(v * 100) + '%');
-    slider('opt-ground', 'opt-ground-out', setGroundDetail,
+    document.getElementById('opt-ground-adapt').addEventListener('change', e => {
+      S.groundAdaptive = e.target.checked;
+      if (!S.groundAdaptive) useGroundLevel(S.groundDetail);
+    });
+    slider('opt-ground', 'opt-ground-out', setGroundFloor,
       v => SCENE.GROUND_LEVELS[Math.round(v)].label);
 
     document.getElementById('opt-eye').addEventListener('change', e => {
@@ -544,6 +576,9 @@
       frames++; acc += dt; hudAcc += dt;
 
       const kin = step(dt);
+      if (S.groundAdaptive) {
+        useGroundLevel(SCENE.adaptiveGroundLevel(kin.gamma, S.groundDetail, S.groundActive));
+      }
       const view = render(kin, dt);
 
       if (hudAcc > 0.08) { updateHud(kin, view); hudAcc = 0; }

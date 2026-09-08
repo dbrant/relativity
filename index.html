@@ -141,8 +141,14 @@
     </div>
     <div class="slider">
       <div class="top"><label for="opt-ground">Ground detail</label><output id="opt-ground-out">High</output></div>
-      <input type="range" id="opt-ground" min="0" max="3" step="1" value="2">
+      <input type="range" id="opt-ground" min="0" max="4" step="1" value="2">
+      <small id="opt-ground-now"></small>
     </div>
+    <label class="check">
+      <input type="checkbox" id="opt-ground-adapt" checked>
+      <span>Adapt to speed
+        <small>Aberration magnifies the view astern by &gamma;(1+&beta;), so the ground is retessellated finer as you approach c. The slider above becomes a floor.</small></span>
+    </label>
   </fieldset>
 
   <footer><span><span id="v-fps">&mdash;</span> fps</span><span><span id="v-verts">&mdash;</span> vertices</span></footer>

@@ -37,6 +37,7 @@ uniform float uT;          // world-frame time of observation
 uniform float uLogDepthC;
 uniform float uUseDelay;   // 1 = finite light speed, 0 = see everything instantly
 uniform float uUseAberr;   // 1 = boost apparent positions into the moving frame
+uniform vec3  uOffset;     // rigid shift, so the ground disc can follow the eye
 
 uniform vec4 uMotionA;     // carousel (cx,cy,cz, trackRadius) | shuttle (bx,by,bz, amplitude)
 uniform vec4 uMotionB;     // (omega, restGamma, -, -)
@@ -53,7 +54,7 @@ out float vDist;
 /* Where this vertex is, and how fast it is going, at world time t. */
 #if MOTION == 0
 void motionAt(float t, out vec3 p, out vec3 v, out vec3 n) {
-  p = aPos; v = vec3(0.0); n = aNormal;
+  p = aPos + uOffset; v = vec3(0.0); n = aNormal;
 }
 #elif MOTION == 1
 // Carousel. aPos is the car-local offset: x along the track, y up, z outward.

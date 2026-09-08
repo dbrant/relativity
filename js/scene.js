@@ -188,8 +188,25 @@
     { label: 'Low', rings: 200, sectors: 160 },
     { label: 'Medium', rings: 340, sectors: 264 },
     { label: 'High', rings: 520, sectors: 400 },
-    { label: 'Very high', rings: 780, sectors: 600 }
+    { label: 'Very high', rings: 700, sectors: 540 },
+    { label: 'Extreme', rings: 920, sectors: 700 }
   ];
+
+  /* Aberration magnifies the rear of the view by gamma(1 + beta), so that is
+   * where straight edges bend hardest and where the tessellation has to keep
+   * up. Two steps of headroom above whatever floor the user has chosen, with
+   * hysteresis so a wobble around a threshold cannot thrash the rebuild. */
+  const GROUND_STEP_UP = [1.6, 3.0];
+  const GROUND_STEP_DOWN = [1.45, 2.7];
+
+  function adaptiveGroundLevel(gamma, floor, current) {
+    let boost = 0;
+    for (let i = 0; i < GROUND_STEP_UP.length; i++) {
+      const already = current > floor + i;
+      if (gamma >= (already ? GROUND_STEP_DOWN[i] : GROUND_STEP_UP[i])) boost = i + 1;
+    }
+    return Math.min(GROUND_LEVELS.length - 1, floor + boost);
+  }
 
   function buildGround(level) {
     const L = GROUND_LEVELS[Math.max(0, Math.min(GROUND_LEVELS.length - 1, level | 0))];
@@ -206,6 +223,7 @@
 
   R.scene = {
     buildStatic, buildCarousel, buildShuttle, buildSky, buildGround, GROUND_LEVELS,
+    adaptiveGroundLevel,
     CAROUSEL, SHUTTLE, BEACONS,
     start: { x: 0, y: 1.7, z: 46, yaw: 0, pitch: -0.02 }
   };

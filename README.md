@@ -62,13 +62,26 @@ become 5. There is no drag term: release the keys and you coast.
   is applied per vertex and is strongly non-linear, so straight edges genuinely
   bend. A cube drawn with eight vertices would still look like a cube at 0.9c,
   which is a lie.
-- **The ground gets its own budget.** It is the surface the transform punishes
-  hardest — a flat plane of straight edges that the boost bends into curves, where
-  the faceting error goes as the square of the angular step. It is a polar disc
-  graded exponentially from 1.2 m to 4 km, tessellated so the quads stay square
-  (the radial step used to be 1.8x the tangential one, and that was where the
-  facets came from). `Ground detail` in Settings swaps the mesh live, from 33k
-  vertices at Low to 474k at Very high.
+- **The ground gets its own budget, and it moves.** It is the surface the
+  transform punishes hardest — a flat plane of straight edges that the boost
+  bends into curves, where the faceting error goes as the square of the angular
+  step. It is a polar disc graded exponentially from 1.2 m to 4 km, tessellated
+  so the quads stay square.
+
+  The disc is not scenery, it is a tessellation carrier: its grid and mottle are
+  computed from world coordinates in the fragment shader, so the mesh can slide
+  along with the eye without anything visibly moving. It does exactly that, which
+  keeps the finest rings underfoot however far you have walked. Anchored at the
+  origin it did not — 500 m out, the spacing beneath you was 7.8 m.
+
+- **Tessellation follows γ.** The angular magnification of aberration is exactly
+  `1/D`. Forward that is a compression, so the view ahead needs *less* geometry
+  than at rest; astern it is a magnification of `γ(1+β)`, and that is where
+  straight edges bend hardest. So the ground steps up a ladder as you accelerate
+  — 33k vertices at Low through 650k at Extreme — with two steps of headroom
+  above whatever floor you set, and hysteresis on the thresholds so a wobble
+  cannot thrash it. Levels are built once and kept, because rebuilding a 650k
+  disc mid-acceleration is exactly when a hitch would show.
 - **Backface culling is off.** Terrell rotation shows you faces that are pointing
   away from you; culling them would delete the effect.
 - **Logarithmic depth.** The apparent scene spans centimetres to tens of

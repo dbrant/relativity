@@ -520,6 +520,7 @@ legend { padding: 0 0 8px; }
 .slider .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .slider output { font-size: 11px; color: var(--accent); }
 .slider input { width: 100%; accent-color: var(--accent); cursor: pointer; }
+.slider small { color: var(--accent); font-size: 10px; line-height: 1.4; min-height: 13px; }
 
 #panel footer {
   margin-top: 14px;
