@@ -207,7 +207,9 @@
       const r = rInner + (rOuter - rInner) * Math.pow(v, 0.75);
       const crest = 40 + 340 * Math.pow(height(u), 1.9);
       const y = crest * Math.sin(Math.pow(v, 0.8) * Math.PI * 0.5) * (1 - v * 0.15);
-      const n = [Math.cos(a) * 0.35, 0.9, Math.sin(a) * 0.35];
+      // Tilted toward the ring centre: the park is inside this ring, so this is
+      // the side that faces the observer and therefore the side that is lit.
+      const n = [-Math.cos(a) * 0.35, 0.9, -Math.sin(a) * 0.35];
       const len = Math.hypot(n[0], n[1], n[2]);
       return [[Math.cos(a) * r, y, Math.sin(a) * r], [n[0] / len, n[1] / len, n[2] / len]];
     });
