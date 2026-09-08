@@ -7,7 +7,7 @@
 (function (R) {
   'use strict';
 
-  const STRIDE = 12; // pos3 normal3 color3 mat3
+  const STRIDE = 14; // pos3 normal3 color3 mat3 uv2
 
   function Mesh() { this.verts = []; this.tris = []; }
 
@@ -15,9 +15,10 @@
    * ordinary scenery can keep passing a pair. Keeping motion and blink apart
    * matters: sharing one slot once put a lamp on a different oscillation phase
    * from the vehicle carrying it, and it drifted off into the air. */
-  Mesh.prototype.push = function (p, n, c, m) {
+  Mesh.prototype.push = function (p, n, c, m, uv) {
     this.verts.push(p[0], p[1], p[2], n[0], n[1], n[2], c[0], c[1], c[2],
-                    m[0], m[1] || 0, m[2] || 0);
+                    m[0], m[1] || 0, m[2] || 0,
+                    uv ? uv[0] : 0, uv ? uv[1] : 0);
     return this.verts.length / STRIDE - 1;
   };
   Mesh.prototype.quad = function (a, b, c, d) {
@@ -32,12 +33,15 @@
    * wound backwards and the box disagreed with itself on two of six faces —
    * which inverted gl_FrontFacing and lit those surfaces from the wrong side.
    * Nothing caught it because culling is off. Derived, it cannot drift. */
-  function patch(mesh, nu, nv, color, mat, fn) {
+  function patch(mesh, nu, nv, color, mat, fn, uvx) {
+    const su = uvx ? uvx[0] : 1, sv = uvx ? uvx[1] : 1;
+    const ou = uvx ? uvx[2] : 0, ov = uvx ? uvx[3] : 0;
     const base = mesh.count();
     for (let j = 0; j <= nv; j++) {
       for (let i = 0; i <= nu; i++) {
-        const r = fn(i / nu, j / nv);
-        mesh.push(r[0], r[1], color, mat);
+        const u = i / nu, v = j / nv;
+        const r = fn(u, v);
+        mesh.push(r[0], r[1], color, mat, [u * su + ou, v * sv + ov]);
       }
     }
 
@@ -75,7 +79,10 @@
 
   /* Axis-aligned box, centre (cx,cy,cz), full extents (sx,sy,sz).
    * tint(x,y,z) may return a per-vertex colour (used for striped rods). */
-  function box(mesh, cx, cy, cz, sx, sy, sz, color, mat, tint) {
+  /* uvAspect, when given, lays the texture on each face as a centred decal of
+   * that width:height ratio, scaled to fit. Stretching one image across faces of
+   * different proportions distorts it differently on each; fitting does not. */
+  function box(mesh, cx, cy, cz, sx, sy, sz, color, mat, tint, uvAspect) {
     const hx = sx / 2, hy = sy / 2, hz = sz / 2;
     const ni = seg(sx), nj = seg(sy), nk = seg(sz);
     const faces = [
@@ -89,6 +96,14 @@
     for (const [n, off, ua, va, nu, nv] of faces) {
       const uh = [ua[0] * hx, ua[1] * hy, ua[2] * hz];
       const vh = [va[0] * hx, va[1] * hy, va[2] * hz];
+      let uvx = null;
+      if (uvAspect) {
+        const fw = 2 * (ua[0] * hx + ua[1] * hy + ua[2] * hz);
+        const fh = 2 * (va[0] * hx + va[1] * hy + va[2] * hz);
+        const dh = Math.min(fh, fw / uvAspect);
+        const su = fw / (dh * uvAspect), sv = fh / dh;
+        uvx = [su, sv, (1 - su) / 2, (1 - sv) / 2];
+      }
       patch(mesh, nu, nv, color, mat, (u, v) => {
         const s = (u - 0.5) * 2, t = (v - 0.5) * 2;
         const p = [
@@ -97,7 +112,7 @@
           cz + n[2] * off + uh[2] * s + vh[2] * t
         ];
         return [p, n];
-      });
+      }, uvx);
       if (tint) {
         // Re-colour the vertices just written.
         const v = mesh.verts;

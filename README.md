@@ -125,7 +125,7 @@ become 5. There is no drag term: release the keys and you coast.
 | the arches | closed loops, so you can watch a circle become an ellipse |
 | the beacons | all flash once per second of *world* time; their apparent rate is a Doppler readout you can count |
 | the carousel | cars contracted by their own motion, each seen at a different retarded moment; the receding half is beamed nearly to black |
-| the shuttle | slides along X, so its contraction breathes in and out as it goes |
+| the shuttle | slides along X, so its contraction breathes in and out as it goes; its flanks carry a photographic decal |
 | two sculptures | STL models on plinths, flanking the colonnade |
 
 ## STL models
@@ -175,7 +175,7 @@ js/stl.js         STL loading: weld, subdivide, auto-fit
 js/shaders.js     the relativistic vertex transform
 js/scene.js       the park
 js/app.js         controls, dynamics, render loop
-objects/          STL models, fetched at load
+objects/          STL models and textures, fetched at load
 tools/serve.mjs   dev server, no-cache
 ```
 

@@ -25,6 +25,7 @@ in vec3 aPos;      // rest-frame position (world position for static geometry)
 in vec3 aNormal;
 in vec3 aColor;
 in vec3 aMat;      // x = material kind, y = motion phase, z = blink phase
+in vec2 aUV;
 
 uniform mat4  uProj;
 uniform mat3  uViewRot;
@@ -46,6 +47,7 @@ out vec3  vWorldPos;
 out vec3  vNormal;
 out vec3  vColor;
 out vec3  vMat;
+out vec2  vUV;
 out vec3  vViewDir;
 out float vD;
 out float vTEmit;
@@ -157,6 +159,7 @@ void main() {
   vNormal   = n;
   vColor    = aColor;
   vMat      = aMat;
+  vUV       = aUV;
   vViewDir  = -rh;
   vD        = dObs * dSrc;
   vTEmit    = uT - a;
@@ -177,6 +180,7 @@ in vec3  vWorldPos;
 in vec3  vNormal;
 in vec3  vColor;
 in vec3  vMat;
+in vec2  vUV;
 in vec3  vViewDir;
 in float vD;
 in float vTEmit;
@@ -202,6 +206,8 @@ uniform float uExposure;
 uniform float uBeaconRate;
 uniform vec3  uBandColor;
 uniform float uBandWidth;
+uniform sampler2D uTex;
+uniform float uTexReady;
 
 out vec4 fragColor;
 
@@ -295,6 +301,16 @@ void main() {
   // as a flash rather than as a bright object getting slightly brighter. Its
   // vertex colour is kept for the light it emits, not for the glass.
   if (beacon) base = vec3(0.012);
+
+  /* A decal, mapped once per face with its aspect preserved, so it reads as a
+   * panel applied to the vehicle rather than a skin stretched over it. Sampled
+   * outside the branch: texture() needs uniform control flow to keep its
+   * implicit derivatives, and therefore its mip level, well defined. */
+  vec3 decal = texture(uTex, vec2(vUV.x, 1.0 - vUV.y)).rgb;
+  if (kind > 8.5 && kind < 9.5 && uTexReady > 0.5) {
+    vec2 g = step(vec2(0.0), vUV) * step(vUV, vec2(1.0));
+    base = mix(base, decal, g.x * g.y);
+  }
 
   // Surveyor's banding, along X or along Z.
   if (kind > 4.5 && kind < 6.5) {

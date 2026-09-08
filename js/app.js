@@ -241,6 +241,12 @@
     R3.mShuttle = GL.uploadMesh(g, R3.progShuttle, SCENE.buildShuttle());
 
     R3.lut = COLOR.buildLut(g);
+    R3.decal = g.createTexture();
+    R3.decalReady = false;
+    g.bindTexture(g.TEXTURE_2D, R3.decal);
+    g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, 1, 1, 0, g.RGBA, g.UNSIGNED_BYTE,
+      new Uint8Array([255, 255, 255, 255]));
+    g.bindTexture(g.TEXTURE_2D, null);
     R3.exposure = S.exposure;
     R3.proj = new Float32Array(16);
     R3.viewRot = new Float32Array(9);
@@ -322,6 +328,11 @@
     g.activeTexture(g.TEXTURE0);
     g.bindTexture(g.TEXTURE_2D, R3.lut.tex);
     g.uniform1i(u.uLut, 0);
+
+    g.activeTexture(g.TEXTURE1);
+    g.bindTexture(g.TEXTURE_2D, R3.decal);
+    g.uniform1i(u.uTex, 1);
+    g.uniform1f(u.uTexReady, R3.decalReady ? 1 : 0);
     g.uniform1i(u.uLutN, R3.lut.n);
     g.uniform1f(u.uLutLogMin, R3.lut.logMin);
     g.uniform1f(u.uLutLogMax, R3.lut.logMax);
@@ -563,6 +574,34 @@
     });
   }
 
+  /* The decal is uploaded as SRGB8_ALPHA8 so the hardware linearises it before
+   * filtering — a JPEG is gamma-encoded, and lighting it as if it were linear
+   * would darken the midtones. Mipmaps and anisotropy matter here: the shuttle's
+   * flank is usually seen at a glancing angle and would otherwise crawl. */
+  function loadDecal() {
+    const img = new Image();
+    img.onload = () => {
+      const g = glc;
+      g.bindTexture(g.TEXTURE_2D, R3.decal);
+      g.pixelStorei(g.UNPACK_FLIP_Y_WEBGL, false);
+      g.texImage2D(g.TEXTURE_2D, 0, g.SRGB8_ALPHA8, g.RGBA, g.UNSIGNED_BYTE, img);
+      g.generateMipmap(g.TEXTURE_2D);
+      g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.LINEAR_MIPMAP_LINEAR);
+      g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.LINEAR);
+      g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_S, g.CLAMP_TO_EDGE);
+      g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_T, g.CLAMP_TO_EDGE);
+      const aniso = g.getExtension('EXT_texture_filter_anisotropic');
+      if (aniso) {
+        g.texParameterf(g.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT,
+          Math.min(8, g.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+      }
+      g.bindTexture(g.TEXTURE_2D, null);
+      R3.decalReady = true;
+    };
+    img.onerror = () => console.warn('Could not load objects/' + SCENE.TEXTURE_FILE);
+    img.src = 'objects/' + SCENE.TEXTURE_FILE;
+  }
+
   // --------------------------------------------------------------------- go -
   function boot() {
     canvas = document.getElementById('view');
@@ -601,6 +640,7 @@
     bindControls();
     setupInput();
     loadModels();
+    loadDecal();
 
     let last = performance.now(), acc = 0, frames = 0, hudAcc = 0;
     function frame(now) {

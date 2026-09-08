@@ -48,6 +48,8 @@
   // along Z. 8 is distant terrain, which takes less of the haze.
   const BAND_X = [5, 0, 0], BAND_Z = [6, 0, 0], HILLS = [8, 0, 0];
   const BAND_WIDTH = 2.0;
+  const TEXTURE_FILE = 'texture1.jpg';
+  const TEXTURE_ASPECT = 1200 / 499;
   const beaconMat = blink => [2, 0, blink];
 
   /* Deterministic scatter so the layout is the same every time you load it. */
@@ -185,8 +187,8 @@
   /* The shuttle in its own rest frame: 14 m of clearly-marked length. */
   function buildShuttle() {
     const m = new geo.Mesh();
-    geo.box(m, 0, 1.9, 0, 14, 2.6, 2.4, C.shuttle, [0, 0, 0],
-      (x) => (Math.floor((x + 7) / 1.75) & 1) ? C.shuttle : C.shuttleTrim);
+    // Livery panel rather than stripes: kind 9 samples the decal texture.
+    geo.box(m, 0, 1.9, 0, 14, 2.6, 2.4, C.shuttle, [9, 0, 0], null, TEXTURE_ASPECT);
     geo.box(m, 0, 3.32, 0, 13.2, 0.28, 2.6, C.shuttleTrim, [3, 0, 0]);
     geo.box(m, 0, 0.5, 0, 13.6, 0.5, 2.0, C.basalt, [0, 0, 0]);
     // Both lamps ride the shuttle: motion phase 0, alternating blink phases.
@@ -245,7 +247,7 @@
 
   R.scene = {
     buildStatic, buildCarousel, buildShuttle, buildSky, buildGround, GROUND_LEVELS, MODELS,
-    BAND_COLOR: C.staveB, BAND_WIDTH,
+    BAND_COLOR: C.staveB, BAND_WIDTH, TEXTURE_FILE,
     adaptiveGroundLevel,
     CAROUSEL, SHUTTLE, BEACONS,
     start: { x: 0, y: 1.7, z: 46, yaw: 0, pitch: -0.02 }

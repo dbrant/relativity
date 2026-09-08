@@ -39,8 +39,8 @@
   }
 
   // Interleaved layout shared by every mesh in the sim.
-  // pos(3) normal(3) color(3) mat(3)  =  12 floats
-  const STRIDE = 12;
+  // pos(3) normal(3) color(3) mat(3) uv(2)  =  14 floats
+  const STRIDE = 14;
 
   function uploadMesh(gl, prog, mesh) {
     const vao = gl.createVertexArray();
@@ -61,6 +61,7 @@
     bind('aNormal', 3, 3);
     bind('aColor', 3, 6);
     bind('aMat', 3, 9);
+    bind('aUV', 2, 12);
 
     const ibo = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
