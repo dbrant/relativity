@@ -21,9 +21,16 @@ Each vertex is asked one question: *light arriving at my eye right now, from thi
 piece of the world — where did it come from, and what happened on the way?*
 
 1. **Retarded time.** Walk back down the past light cone to find when the light
-   left. For static scenery that is `distance / c`. For the moving props it is a
-   six-step Newton solve of `|p(t − a) − eye| = c·a`, which converges quadratically
-   because `dg/da = 1 + (v·n̂)/c` never reaches zero while `|v| < c`.
+   left. For static scenery that is `distance / c`. For the moving props it means
+   solving `g(a) = a − |p(t − a) − eye| / c = 0`, and doing it carefully:
+   `g'(a) = 1 + (v·n̂)/c` never reaches zero while `|v| < c`, but it gets to 0.14
+   at the corners of a carousel car, which travel at 0.857c. Plain Newton then
+   flings the iterate most of the way around the orbit, and since every vertex
+   solves independently, neighbours land on different revolutions and tear
+   triangles across the scene. Every point of a mover stays within a known radius
+   of its reference, so the delay is bracketed, `g` is monotonic, and bisection
+   cannot fail; Newton is accepted only when it lands inside the bracket. 24
+   iterations, worst error 0.06 px.
 
 2. **The boost.** Take the null 4-vector from that emission event to the eye and
    Lorentz-transform it into the observer's instantaneous rest frame. Everything
@@ -113,10 +120,12 @@ become 5. There is no drag term: release the keys and you coast.
 
 ## Controls
 
-`W A S D` or arrows walk · mouse looks · `Shift` sprints · `Space` brakes (nothing
-else slows you — you coast) ·
-`Q`/`E` drop and rise · `G` toggles relativity off and back on · `R` resets ·
-`Tab` settings · `H` field guide.
+`W A S D` or arrows walk · mouse looks · `Space` brakes (nothing else slows you —
+you coast) · `Q`/`E` drop and rise · `R` resets · `Tab` settings · `H` field guide.
+
+One key per effect, so you can take them away singly and see which part of the
+picture each one was responsible for: `L` light-travel delay, `G` aberration and
+contraction, `C` Doppler colour, `B` relativistic beaming.
 
 ## Layout
 

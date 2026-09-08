@@ -516,6 +516,16 @@ legend { padding: 0 0 8px; }
 .check input { margin: 2px 0 0; accent-color: var(--accent); cursor: pointer; }
 .check span { color: var(--ink); }
 .check small { display: block; color: var(--faint); font-size: 10px; line-height: 1.45; margin-top: 2px; }
+.check kbd {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--dim);
+  background: rgba(150, 178, 210, 0.11);
+  border: 1px solid var(--edge);
+  border-radius: 2px;
+  padding: 1px 5px;
+  margin-left: 4px;
+}
 
 .slider { display: grid; gap: 5px; padding: 7px 0; }
 .slider .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
@@ -589,7 +599,7 @@ legend { padding: 0 0 8px; }
 #help p { margin: 0 0 9px; font-size: 12px; line-height: 1.65; color: var(--dim); max-width: 62ch; }
 #help p b { color: var(--ink); font-weight: 500; }
 
-#keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); gap: 6px 20px; }
+.keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); gap: 6px 20px; }
 
 .keyrow {
   display: grid;

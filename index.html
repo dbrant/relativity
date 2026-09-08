@@ -67,9 +67,8 @@
 <p class="hud" id="hint">
   <span><em>W A S D</em> walk</span>
   <span><em>Mouse</em> look</span>
-  <span><em>Shift</em> sprint</span>
   <span><em>Space</em> brake</span>
-  <span><em>G</em> relativity on / off</span>
+  <span><em>L G C B</em> toggle effects</span>
   <span><em>R</em> reset</span>
 </p>
 
@@ -96,22 +95,22 @@
     <legend class="eyebrow">Effects</legend>
     <label class="check">
       <input type="checkbox" id="fx-delay" checked>
-      <span>Light-travel delay
+      <span>Light-travel delay <kbd>L</kbd>
         <small>You see each object where and when its light left it.</small></span>
     </label>
     <label class="check">
       <input type="checkbox" id="fx-aberr" checked>
-      <span>Aberration &amp; contraction
+      <span>Aberration &amp; contraction <kbd>G</kbd>
         <small>The Lorentz boost of apparent position. Terrell rotation comes with it.</small></span>
     </label>
     <label class="check">
       <input type="checkbox" id="fx-doppler" checked>
-      <span>Doppler colour
+      <span>Doppler colour <kbd>C</kbd>
         <small>Spectra shifted, then re-matched through the CIE observer.</small></span>
     </label>
     <label class="check">
       <input type="checkbox" id="fx-beam" checked>
-      <span>Relativistic beaming
+      <span>Relativistic beaming <kbd>B</kbd>
         <small>Light piles up ahead of you and thins out behind.</small></span>
     </label>
   </fieldset>
@@ -178,25 +177,35 @@
   </p>
 
   <h3>Controls</h3>
-  <div id="keys">
+  <div class="keys">
     <div class="keyrow"><kbd>W A S D</kbd><span>walk</span></div>
     <div class="keyrow"><kbd>&uarr; &darr; &larr; &rarr;</kbd><span>walk</span></div>
     <div class="keyrow"><kbd>Mouse</kbd><span>look around</span></div>
-    <div class="keyrow"><kbd>Shift</kbd><span>sprint</span></div>
     <div class="keyrow"><kbd>Space</kbd><span>brake &mdash; nothing else slows you</span></div>
     <div class="keyrow"><kbd>Q</kbd> <span>drop / <kbd>E</kbd> rise</span></div>
-    <div class="keyrow"><kbd>G</kbd><span>relativity on / off</span></div>
     <div class="keyrow"><kbd>R</kbd><span>return to the start</span></div>
     <div class="keyrow"><kbd>Tab</kbd><span>settings</span></div>
     <div class="keyrow"><kbd>Esc</kbd><span>release the mouse</span></div>
+  </div>
+
+  <h3>Effects, one key each</h3>
+  <p>
+    Take them away one at a time rather than all together &mdash; whatever changes
+    when you press a key is that piece of the physics, on its own.
+  </p>
+  <div class="keys">
+    <div class="keyrow"><kbd>L</kbd><span>light-travel delay</span></div>
+    <div class="keyrow"><kbd>G</kbd><span>aberration &amp; contraction</span></div>
+    <div class="keyrow"><kbd>C</kbd><span>Doppler colour</span></div>
+    <div class="keyrow"><kbd>B</kbd><span>relativistic beaming</span></div>
   </div>
 
   <h3>Things worth trying</h3>
   <ul>
     <li>
       Two <b>surveyor's staves</b> lie in the park, both 60 m, banded every 2 m.
-      One runs along the corridor, one across it. Sprint down the corridor and
-      count the bands: only the stave lying along your path loses any.
+      One runs along the corridor, one across it. Run down the corridor and count
+      the bands: only the stave lying along your path loses any.
     </li>
     <li>
       Run hard and look behind you. The entire world astern collapses into a
@@ -221,8 +230,9 @@ The <b>carousel</b> cars are contracted by their own motion, and you see each
       you flares — the searchlight effect, on a fairground ride.
     </li>
     <li>
-      Press <b>G</b> at speed to drop back to a Galilean view. Whatever changes
-      when you do is exactly the relativity.
+      At speed, press <b>G</b> to drop back to Galilean geometry, or <b>L</b>,
+      <b>C</b> and <b>B</b> to take away light-travel delay, Doppler colour and
+      beaming one at a time. Whatever changes is exactly that piece of the physics.
     </li>
     <li>
       Let the clocks run apart, then hit <b>R</b>. Your watch is the one that

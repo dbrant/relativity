@@ -28,7 +28,6 @@
   const ADAPT_TAU = 0.30;        // seconds for the eye to catch up
 
   const ACCEL = 1.25;            // proper acceleration, in rapidity per second
-  const SPRINT = 3.0;
   const BRAKE_DECAY = 6.0;
   const BETA_MAX = 0.99999;
   const EYE_MIN = 0.6, EYE_MAX = 400;
@@ -82,8 +81,13 @@
   const CODE = {
     KeyW: 'fwd', ArrowUp: 'fwd', KeyS: 'back', ArrowDown: 'back',
     KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right',
-    KeyQ: 'down', KeyE: 'up', Space: 'brake', ShiftLeft: 'sprint', ShiftRight: 'sprint'
+    KeyQ: 'down', KeyE: 'up', Space: 'brake'
   };
+
+  // One key per effect, rather than one key for all of them: seeing which single
+  // piece of the physics you just removed is more instructive than seeing all
+  // four go at once.
+  const FX_KEYS = { KeyL: 'delay', KeyG: 'aberr', KeyC: 'doppler', KeyB: 'beam' };
 
   let canvas, glc, hud;
 
@@ -103,8 +107,12 @@
 
     addEventListener('keydown', e => {
       if (e.code === 'Escape') { return; }           // the browser releases the lock
+      if (e.repeat) { return; }                      // held keys must not flicker toggles
+
+      const fx = FX_KEYS[e.code];
+      if (fx) { S.fx[fx] = !S.fx[fx]; syncControls(); return; }
+
       if (e.code === 'Tab') { e.preventDefault(); togglePanel(); return; }
-      if (e.code === 'KeyG') { toggleRelativity(); return; }
       if (e.code === 'KeyR') { resetObserver(); return; }
       if (e.code === 'KeyH') { toggleHelp(); return; }
       const a = CODE[e.code];
@@ -171,7 +179,7 @@
     if (keys.brake) {
       S.vel = shedRapidity(S.vel, BRAKE_DECAY * dt, c);
     } else if (dl > 1e-6) {
-      const a = ACCEL * (keys.sprint ? SPRINT : 1) * dt;
+      const a = ACCEL * dt;
       S.vel = addVelocity(S.vel, [d[0] / dl * a * c, d[1] / dl * a * c, d[2] / dl * a * c], c);
     }
     // No drag term: let go and you keep the velocity you built up. Space is
@@ -463,12 +471,6 @@
   // --------------------------------------------------------------- UI wiring
   function togglePanel() { hud.panel.classList.toggle('is-open'); }
   function toggleHelp() { hud.help.classList.toggle('is-open'); }
-
-  function toggleRelativity() {
-    const on = !(S.fx.delay && S.fx.aberr && S.fx.doppler && S.fx.beam);
-    S.fx.delay = S.fx.aberr = S.fx.doppler = S.fx.beam = on;
-    syncControls();
-  }
 
   function syncControls() {
     for (const k in S.fx) {

@@ -527,6 +527,16 @@ legend { padding: 0 0 8px; }
 .check input { margin: 2px 0 0; accent-color: var(--accent); cursor: pointer; }
 .check span { color: var(--ink); }
 .check small { display: block; color: var(--faint); font-size: 10px; line-height: 1.45; margin-top: 2px; }
+.check kbd {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--dim);
+  background: rgba(150, 178, 210, 0.11);
+  border: 1px solid var(--edge);
+  border-radius: 2px;
+  padding: 1px 5px;
+  margin-left: 4px;
+}
 
 .slider { display: grid; gap: 5px; padding: 7px 0; }
 .slider .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
@@ -600,7 +610,7 @@ legend { padding: 0 0 8px; }
 #help p { margin: 0 0 9px; font-size: 12px; line-height: 1.65; color: var(--dim); max-width: 62ch; }
 #help p b { color: var(--ink); font-weight: 500; }
 
-#keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); gap: 6px 20px; }
+.keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); gap: 6px 20px; }
 
 .keyrow {
   display: grid;
@@ -698,9 +708,8 @@ legend { padding: 0 0 8px; }
 <p class="hud" id="hint">
   <span><em>W A S D</em> walk</span>
   <span><em>Mouse</em> look</span>
-  <span><em>Shift</em> sprint</span>
   <span><em>Space</em> brake</span>
-  <span><em>G</em> relativity on / off</span>
+  <span><em>L G C B</em> toggle effects</span>
   <span><em>R</em> reset</span>
 </p>
 
@@ -727,22 +736,22 @@ legend { padding: 0 0 8px; }
     <legend class="eyebrow">Effects</legend>
     <label class="check">
       <input type="checkbox" id="fx-delay" checked>
-      <span>Light-travel delay
+      <span>Light-travel delay <kbd>L</kbd>
         <small>You see each object where and when its light left it.</small></span>
     </label>
     <label class="check">
       <input type="checkbox" id="fx-aberr" checked>
-      <span>Aberration &amp; contraction
+      <span>Aberration &amp; contraction <kbd>G</kbd>
         <small>The Lorentz boost of apparent position. Terrell rotation comes with it.</small></span>
     </label>
     <label class="check">
       <input type="checkbox" id="fx-doppler" checked>
-      <span>Doppler colour
+      <span>Doppler colour <kbd>C</kbd>
         <small>Spectra shifted, then re-matched through the CIE observer.</small></span>
     </label>
     <label class="check">
       <input type="checkbox" id="fx-beam" checked>
-      <span>Relativistic beaming
+      <span>Relativistic beaming <kbd>B</kbd>
         <small>Light piles up ahead of you and thins out behind.</small></span>
     </label>
   </fieldset>
@@ -809,25 +818,35 @@ legend { padding: 0 0 8px; }
   </p>
 
   <h3>Controls</h3>
-  <div id="keys">
+  <div class="keys">
     <div class="keyrow"><kbd>W A S D</kbd><span>walk</span></div>
     <div class="keyrow"><kbd>&uarr; &darr; &larr; &rarr;</kbd><span>walk</span></div>
     <div class="keyrow"><kbd>Mouse</kbd><span>look around</span></div>
-    <div class="keyrow"><kbd>Shift</kbd><span>sprint</span></div>
     <div class="keyrow"><kbd>Space</kbd><span>brake &mdash; nothing else slows you</span></div>
     <div class="keyrow"><kbd>Q</kbd> <span>drop / <kbd>E</kbd> rise</span></div>
-    <div class="keyrow"><kbd>G</kbd><span>relativity on / off</span></div>
     <div class="keyrow"><kbd>R</kbd><span>return to the start</span></div>
     <div class="keyrow"><kbd>Tab</kbd><span>settings</span></div>
     <div class="keyrow"><kbd>Esc</kbd><span>release the mouse</span></div>
+  </div>
+
+  <h3>Effects, one key each</h3>
+  <p>
+    Take them away one at a time rather than all together &mdash; whatever changes
+    when you press a key is that piece of the physics, on its own.
+  </p>
+  <div class="keys">
+    <div class="keyrow"><kbd>L</kbd><span>light-travel delay</span></div>
+    <div class="keyrow"><kbd>G</kbd><span>aberration &amp; contraction</span></div>
+    <div class="keyrow"><kbd>C</kbd><span>Doppler colour</span></div>
+    <div class="keyrow"><kbd>B</kbd><span>relativistic beaming</span></div>
   </div>
 
   <h3>Things worth trying</h3>
   <ul>
     <li>
       Two <b>surveyor's staves</b> lie in the park, both 60 m, banded every 2 m.
-      One runs along the corridor, one across it. Sprint down the corridor and
-      count the bands: only the stave lying along your path loses any.
+      One runs along the corridor, one across it. Run down the corridor and count
+      the bands: only the stave lying along your path loses any.
     </li>
     <li>
       Run hard and look behind you. The entire world astern collapses into a
@@ -852,8 +871,9 @@ The <b>carousel</b> cars are contracted by their own motion, and you see each
       you flares — the searchlight effect, on a fairground ride.
     </li>
     <li>
-      Press <b>G</b> at speed to drop back to a Galilean view. Whatever changes
-      when you do is exactly the relativity.
+      At speed, press <b>G</b> to drop back to Galilean geometry, or <b>L</b>,
+      <b>C</b> and <b>B</b> to take away light-travel delay, Doppler colour and
+      beaming one at a time. Whatever changes is exactly that piece of the physics.
     </li>
     <li>
       Let the clocks run apart, then hit <b>R</b>. Your watch is the one that
@@ -1986,7 +2006,6 @@ void main() {
   const ADAPT_TAU = 0.30;        // seconds for the eye to catch up
 
   const ACCEL = 1.25;            // proper acceleration, in rapidity per second
-  const SPRINT = 3.0;
   const BRAKE_DECAY = 6.0;
   const BETA_MAX = 0.99999;
   const EYE_MIN = 0.6, EYE_MAX = 400;
@@ -2040,8 +2059,13 @@ void main() {
   const CODE = {
     KeyW: 'fwd', ArrowUp: 'fwd', KeyS: 'back', ArrowDown: 'back',
     KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right',
-    KeyQ: 'down', KeyE: 'up', Space: 'brake', ShiftLeft: 'sprint', ShiftRight: 'sprint'
+    KeyQ: 'down', KeyE: 'up', Space: 'brake'
   };
+
+  // One key per effect, rather than one key for all of them: seeing which single
+  // piece of the physics you just removed is more instructive than seeing all
+  // four go at once.
+  const FX_KEYS = { KeyL: 'delay', KeyG: 'aberr', KeyC: 'doppler', KeyB: 'beam' };
 
   let canvas, glc, hud;
 
@@ -2061,8 +2085,12 @@ void main() {
 
     addEventListener('keydown', e => {
       if (e.code === 'Escape') { return; }           // the browser releases the lock
+      if (e.repeat) { return; }                      // held keys must not flicker toggles
+
+      const fx = FX_KEYS[e.code];
+      if (fx) { S.fx[fx] = !S.fx[fx]; syncControls(); return; }
+
       if (e.code === 'Tab') { e.preventDefault(); togglePanel(); return; }
-      if (e.code === 'KeyG') { toggleRelativity(); return; }
       if (e.code === 'KeyR') { resetObserver(); return; }
       if (e.code === 'KeyH') { toggleHelp(); return; }
       const a = CODE[e.code];
@@ -2129,7 +2157,7 @@ void main() {
     if (keys.brake) {
       S.vel = shedRapidity(S.vel, BRAKE_DECAY * dt, c);
     } else if (dl > 1e-6) {
-      const a = ACCEL * (keys.sprint ? SPRINT : 1) * dt;
+      const a = ACCEL * dt;
       S.vel = addVelocity(S.vel, [d[0] / dl * a * c, d[1] / dl * a * c, d[2] / dl * a * c], c);
     }
     // No drag term: let go and you keep the velocity you built up. Space is
@@ -2421,12 +2449,6 @@ void main() {
   // --------------------------------------------------------------- UI wiring
   function togglePanel() { hud.panel.classList.toggle('is-open'); }
   function toggleHelp() { hud.help.classList.toggle('is-open'); }
-
-  function toggleRelativity() {
-    const on = !(S.fx.delay && S.fx.aberr && S.fx.doppler && S.fx.beam);
-    S.fx.delay = S.fx.aberr = S.fx.doppler = S.fx.beam = on;
-    syncControls();
-  }
 
   function syncControls() {
     for (const k in S.fx) {
