@@ -287,17 +287,18 @@ float gridLine(vec2 p, float step) {
 
 void main() {
   /* A surface emits only into the hemisphere its normal faces, so one that was
-   * turned away from you when it emitted sent you nothing. Seeing such a face at
-   * all means the object's own motion has opened a gap between the retarded
-   * images of its faces and you are looking into its inside, which is unlit.
+   * turned away from you when it emitted sent you nothing, and must not appear.
    *
-   * Shading those as exteriors put a second, smaller copy of the shuttle's
-   * livery on it, with a hard seam where the two regimes met. Keyed on the line
-   * of sight rather than gl_FrontFacing, which also covers imported meshes whose
-   * winding is a convention rather than a guarantee. */
+   * Discarding rather than darkening: each face is imaged at its own retarded
+   * time, so a fast mover's faces no longer share a silhouette and a back face
+   * can end up nearest along a ray. Left in the depth buffer it wins the test
+   * and hides whichever front face genuinely lies behind it — which is what put
+   * a second, smaller copy of the shuttle's livery on its own flank, with a hard
+   * seam where the two regimes met. Keyed on the line of sight rather than
+   * gl_FrontFacing, which also covers imported meshes whose winding is a
+   * convention rather than a guarantee. */
   vec3 N = normalize(vNormal);
-  bool interior = dot(N, vViewDir) < 0.0;
-  if (interior) N = -N;
+  if (dot(N, vViewDir) < 0.0) discard;
 
   float kind = vMat.x;
   vec3 base = vColor;
@@ -313,7 +314,7 @@ void main() {
    * outside the branch: texture() needs uniform control flow to keep its
    * implicit derivatives, and therefore its mip level, well defined. */
   vec3 decal = texture(uTex, vec2(vUV.x, 1.0 - vUV.y)).rgb;
-  if (kind > 8.5 && kind < 9.5 && uTexReady > 0.5 && !interior) {
+  if (kind > 8.5 && kind < 9.5 && uTexReady > 0.5) {
     vec2 g = step(vec2(0.0), vUV) * step(vUV, vec2(1.0));
     base = mix(base, decal, g.x * g.y);
   }
@@ -329,9 +330,9 @@ void main() {
     base = mix(base, vec3(0.86, 0.83, 0.66), gridLine(vWorldPos.xz, 10.0) * 0.80);
   }
 
-  float ndl = interior ? 0.0 : max(dot(N, uSunDir), 0.0);
+  float ndl = max(dot(N, uSunDir), 0.0);
   vec3 ambient = mix(uHaze * 0.55, uZenith, 0.5 + 0.5 * N.y);
-  vec3 radiance = base * (uSunTint * ndl * 1.50 + ambient * (interior ? 0.16 : 0.70));
+  vec3 radiance = base * (uSunTint * ndl * 1.50 + ambient * 0.70);
 
   if (kind > 2.5 && kind < 3.5) {
     vec3 H = normalize(uSunDir + vViewDir);
