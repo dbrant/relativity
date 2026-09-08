@@ -289,10 +289,6 @@ button {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
 }
 
 .cross {
@@ -312,12 +308,16 @@ button {
 .cross::before { left: 50%; top: 0; width: 1px; height: 100%; transform: translateX(-50%); }
 .cross::after { top: 50%; left: 0; height: 1px; width: 100%; transform: translateY(-50%); }
 
+/* The Doppler gauge reads the centre of the view but lives down with the other
+   instruments, so it never sits in front of what it is measuring. */
 #gauge {
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 7px;
-  margin-top: 34px;
   padding: 9px 12px 8px;
   background: rgba(9, 13, 19, 0.62);
   border: 1px solid var(--edge);
@@ -392,9 +392,9 @@ button {
 #hint em { font-style: normal; color: var(--ink); }
 
 #galilean {
-  top: 50%;
+  bottom: 128px;   /* clears the 72px-tall gauge below it */
   left: 50%;
-  transform: translate(-50%, calc(-50% - 86px));
+  transform: translateX(-50%);
   font-family: var(--label);
   font-weight: 600;
   font-size: 10px;
@@ -424,9 +424,8 @@ button {
 
 #overlay.is-hidden { opacity: 0; pointer-events: none; }
 
-/* Returning after Esc: a resume prompt, not the introduction again. It sits
-   above centre so it never covers the Doppler gauge under the crosshair. */
-#overlay.is-paused .card { padding: 17px 26px 15px; transform: translateY(-104px); }
+/* Returning after Esc: a resume prompt, not the introduction again. */
+#overlay.is-paused .card { padding: 17px 26px 15px; }
 #overlay.is-paused h2 { font-size: 15px; margin-bottom: 0; }
 #overlay.is-paused #overlay-body { display: none; }
 #overlay.is-paused .cue { margin-top: 11px; }
@@ -591,6 +590,8 @@ legend { padding: 0 0 8px; }
   #kinematics .big span:first-child { font-size: 26px; }
   #masthead p, #hint { display: none; }
   #spectrum-wrap { width: 200px; }
+  #gauge { bottom: 16px; }
+  #galilean { bottom: 96px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -635,21 +636,22 @@ legend { padding: 0 0 8px; }
 
 <div class="hud" id="reticle" aria-hidden="true">
   <div class="cross"></div>
-  <div id="gauge">
-    <div id="spectrum-wrap">
-      <div id="spectrum"></div>
-      <div id="rest-tick"></div>
-      <div id="marker"></div>
-    </div>
-    <p class="caption">
-      <span>Doppler at the crosshair</span>
-      <b id="v-dop">1.000</b>
-      <span id="v-dopword">at rest</span>
-    </p>
-  </div>
 </div>
 
-<div class="hud" id="galilean">Relativity off &mdash; Galilean view</div>
+<div class="hud" id="gauge" aria-hidden="true">
+  <div id="spectrum-wrap">
+    <div id="spectrum"></div>
+    <div id="rest-tick"></div>
+    <div id="marker"></div>
+  </div>
+  <p class="caption">
+    <span>Doppler at the crosshair</span>
+    <b id="v-dop">1.000</b>
+    <span id="v-dopword">at rest</span>
+  </p>
+</div>
+
+<div class="hud" id="galilean">Galilean view &mdash; aberration off</div>
 
 <p class="hud" id="hint">
   <span><em>W A S D</em> walk</span>
@@ -2178,8 +2180,9 @@ void main() {
       const el = document.getElementById('fx-' + k);
       if (el) el.checked = S.fx[k];
     }
-    const all = S.fx.delay && S.fx.aberr && S.fx.doppler && S.fx.beam;
-    hud.galilean.classList.toggle('is-on', !all);
+    // Only the geometry toggle changes what SHAPE the world is, so that is the
+    // one worth warning about on screen.
+    hud.galilean.classList.toggle('is-on', !S.fx.aberr);
   }
 
   function bindControls() {

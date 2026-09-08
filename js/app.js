@@ -435,8 +435,9 @@
       const el = document.getElementById('fx-' + k);
       if (el) el.checked = S.fx[k];
     }
-    const all = S.fx.delay && S.fx.aberr && S.fx.doppler && S.fx.beam;
-    hud.galilean.classList.toggle('is-on', !all);
+    // Only the geometry toggle changes what SHAPE the world is, so that is the
+    // one worth warning about on screen.
+    hud.galilean.classList.toggle('is-on', !S.fx.aberr);
   }
 
   function bindControls() {
