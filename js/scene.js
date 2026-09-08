@@ -64,7 +64,7 @@
       const a = u * Math.PI * 2;
       const r = rInner + (rOuter - rInner) * v;
       return [[cx + Math.cos(a) * r, y, cz + Math.sin(a) * r], [0, 1, 0]];
-    }, true);
+    });
   }
 
   /* A surveyor's levelling stave: alternating half-metre bands, so its length is

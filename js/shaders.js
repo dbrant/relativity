@@ -280,8 +280,12 @@ float gridLine(vec2 p, float step) {
 }
 
 void main() {
+  // Two-sided shading keyed on the line of sight rather than on winding order.
+  // A surface only sends light your way if it was turned toward you when it
+  // emitted, so this is the physical test — and unlike gl_FrontFacing it also
+  // covers imported STL meshes, whose winding is a convention, not a guarantee.
   vec3 N = normalize(vNormal);
-  if (!gl_FrontFacing) N = -N;
+  if (dot(N, vViewDir) < 0.0) N = -N;
 
   float kind = vMat.x;
   vec3 base = vColor;
@@ -305,7 +309,7 @@ void main() {
 
   float ndl = max(dot(N, uSunDir), 0.0);
   vec3 ambient = mix(uHaze * 0.55, uZenith, 0.5 + 0.5 * N.y);
-  vec3 radiance = base * (uSunTint * ndl * 2.15 + ambient * 1.00);
+  vec3 radiance = base * (uSunTint * ndl * 1.50 + ambient * 0.70);
 
   if (kind > 2.5 && kind < 3.5) {
     vec3 H = normalize(uSunDir + vViewDir);

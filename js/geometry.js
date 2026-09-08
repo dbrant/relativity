@@ -25,8 +25,14 @@
   };
   Mesh.prototype.count = function () { return this.verts.length / STRIDE; };
 
-  /* A subdivided parametric patch. fn(u, v) -> [position, normal]. */
-  function patch(mesh, nu, nv, color, mat, fn, flip) {
+  /* A subdivided parametric patch. fn(u, v) -> [position, normal].
+   *
+   * Winding is derived from the normals rather than trusted to the caller. When
+   * it was a caller's argument, cylinders, the ground and the hills all came out
+   * wound backwards and the box disagreed with itself on two of six faces —
+   * which inverted gl_FrontFacing and lit those surfaces from the wrong side.
+   * Nothing caught it because culling is off. Derived, it cannot drift. */
+  function patch(mesh, nu, nv, color, mat, fn) {
     const base = mesh.count();
     for (let j = 0; j <= nv; j++) {
       for (let i = 0; i <= nu; i++) {
@@ -34,6 +40,28 @@
         mesh.push(r[0], r[1], color, mat);
       }
     }
+
+    // Does corner order (a,b,c) turn the same way its normal points? Sampling
+    // starts at the middle of the patch, furthest from the poles and axis
+    // singularities where the cross product collapses to zero.
+    const corner = k => (base + k) * STRIDE;
+    let flip = false;
+    search:
+    for (let dj = 0; dj < nv; dj++) {
+      const j = ((nv >> 1) + dj) % nv;
+      for (let di = 0; di < nu; di++) {
+        const i = ((nu >> 1) + di) % nu;
+        const a = j * (nu + 1) + i;
+        const oa = corner(a), ob = corner(a + 1), oc = corner(a + nu + 2);
+        const v = mesh.verts;
+        const ux = v[ob] - v[oa], uy = v[ob + 1] - v[oa + 1], uz = v[ob + 2] - v[oa + 2];
+        const wx = v[oc] - v[oa], wy = v[oc + 1] - v[oa + 1], wz = v[oc + 2] - v[oa + 2];
+        const cx = uy * wz - uz * wy, cy = uz * wx - ux * wz, cz = ux * wy - uy * wx;
+        const dot = cx * v[oa + 3] + cy * v[oa + 4] + cz * v[oa + 5];
+        if (Math.abs(dot) > 1e-12) { flip = dot < 0; break search; }
+      }
+    }
+
     for (let j = 0; j < nv; j++) {
       for (let i = 0; i < nu; i++) {
         const a = base + j * (nu + 1) + i;
@@ -51,14 +79,14 @@
     const hx = sx / 2, hy = sy / 2, hz = sz / 2;
     const ni = seg(sx), nj = seg(sy), nk = seg(sz);
     const faces = [
-      [[1, 0, 0], hx, [0, 0, 1], [0, 1, 0], nk, nj, -1],
-      [[-1, 0, 0], hx, [0, 0, 1], [0, 1, 0], nk, nj, 1],
-      [[0, 1, 0], hy, [1, 0, 0], [0, 0, 1], ni, nk, 1],
-      [[0, -1, 0], hy, [1, 0, 0], [0, 0, 1], ni, nk, -1],
-      [[0, 0, 1], hz, [1, 0, 0], [0, 1, 0], ni, nj, 1],
-      [[0, 0, -1], hz, [1, 0, 0], [0, 1, 0], ni, nj, -1]
+      [[1, 0, 0], hx, [0, 0, 1], [0, 1, 0], nk, nj],
+      [[-1, 0, 0], hx, [0, 0, 1], [0, 1, 0], nk, nj],
+      [[0, 1, 0], hy, [1, 0, 0], [0, 0, 1], ni, nk],
+      [[0, -1, 0], hy, [1, 0, 0], [0, 0, 1], ni, nk],
+      [[0, 0, 1], hz, [1, 0, 0], [0, 1, 0], ni, nj],
+      [[0, 0, -1], hz, [1, 0, 0], [0, 1, 0], ni, nj]
     ];
-    for (const [n, off, ua, va, nu, nv, wind] of faces) {
+    for (const [n, off, ua, va, nu, nv] of faces) {
       const uh = [ua[0] * hx, ua[1] * hy, ua[2] * hz];
       const vh = [va[0] * hx, va[1] * hy, va[2] * hz];
       patch(mesh, nu, nv, color, mat, (u, v) => {
@@ -69,7 +97,7 @@
           cz + n[2] * off + uh[2] * s + vh[2] * t
         ];
         return [p, n];
-      }, wind < 0);
+      });
       if (tint) {
         // Re-colour the vertices just written.
         const v = mesh.verts;
@@ -92,7 +120,7 @@
     patch(mesh, nu, 3, color, mat, (u, v) => {
       const a = u * Math.PI * 2;
       return [[cx + Math.cos(a) * radius * v, cy + height, cz + Math.sin(a) * radius * v], [0, 1, 0]];
-    }, true);
+    });
   }
 
   function sphere(mesh, cx, cy, cz, radius, color, mat, nu, nv) {
@@ -127,12 +155,12 @@
       const a = u * Math.PI * 2;
       const r = rMin * Math.exp(k * v * rings);
       return [[Math.cos(a) * r, 0, Math.sin(a) * r], [0, 1, 0]];
-    }, true);
+    });
     // Fill the disc at the centre, where the exponential grading cannot reach.
     patch(mesh, sectors, 6, color, mat, (u, v) => {
       const a = u * Math.PI * 2;
       return [[Math.cos(a) * rMin * v, 0, Math.sin(a) * rMin * v], [0, 1, 0]];
-    }, true);
+    });
   }
 
   function skyDome(mesh, radius, nu, nv) {
@@ -142,7 +170,7 @@
       const a = u * Math.PI * 2, b = v * vMax * Math.PI;
       const d = [Math.sin(b) * Math.cos(a), Math.cos(b), Math.sin(b) * Math.sin(a)];
       return [[d[0] * radius, d[1] * radius, d[2] * radius], [-d[0], -d[1], -d[2]]];
-    }, true);
+    });
   }
 
   /* A ridgeline of hills on the horizon: a displaced annulus. Gives the eye
@@ -167,7 +195,7 @@
       const n = [Math.cos(a) * 0.35, 0.9, Math.sin(a) * 0.35];
       const len = Math.hypot(n[0], n[1], n[2]);
       return [[Math.cos(a) * r, y, Math.sin(a) * r], [n[0] / len, n[1] / len, n[2] / len]];
-    }, true);
+    });
   }
 
   R.geo = { Mesh, patch, box, cylinder, sphere, torusXY, groundDisc, skyDome, mountainRing, seg, STRIDE };
