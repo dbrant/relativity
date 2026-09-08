@@ -192,17 +192,9 @@
     return { verts: m.verts.length / 3, tris: m.index.length / 3 };
   }
 
-  /* Models are embedded as base64 by tools/embed-models.mjs so the page works
-   * straight off the filesystem; the fetch is the fallback when it is served,
-   * and lets you drop in a new STL without rebuilding. */
+  /* Straight off the server, as the file sits on disk. Drop a new STL into
+   * objects/, name it in scene.js, reload — there is no build step to forget. */
   function fetchModel(file) {
-    const data = R.modelData && R.modelData[file];
-    if (data) {
-      const bin = atob(data);
-      const buf = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-      return Promise.resolve(buf.buffer);
-    }
     return fetch('objects/' + file).then(r => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.arrayBuffer();

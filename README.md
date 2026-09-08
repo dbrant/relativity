@@ -8,13 +8,21 @@ and falls away into a shrinking disc, and your watch starts losing time against
 every clock around you. All the effects that normally need a particle accelerator
 happen at a pace you can feel in your legs.
 
-No dependencies, no build step. Open `index.html`.
+## Running it
+
+No dependencies and no build step, but it does need serving — the STL models are
+fetched, and `file://` will not allow that. Any static server will do:
 
 ```
-node tools/serve.mjs         # http://localhost:8123
-node tools/bundle.mjs        # dist/index.html — one self-contained file
-node tools/embed-models.mjs  # after adding or changing an STL
+python -m http.server 8000     # then open http://localhost:8000
 ```
+
+```
+node tools/serve.mjs           # the same, on :8123, with caching turned off
+```
+
+Either works. The node one sends `cache-control: no-store`, which saves you
+hard-reloading after every edit.
 
 ## What it actually computes
 
@@ -122,9 +130,9 @@ become 5. There is no drag term: release the keys and you coast.
 
 ## STL models
 
-Drop an `.stl` into `objects/` (binary or ASCII), add an entry to `MODELS` in
-`js/scene.js`, and run `node tools/embed-models.mjs`. Three things happen to it
-that a plain STL viewer would not bother with:
+Drop an `.stl` into `objects/` (binary or ASCII) and add an entry to `MODELS` in
+`js/scene.js`. Three things happen to it that a plain STL viewer would not bother
+with:
 
 - **Weld.** STL stores each triangle's corners independently, so a closed model
   arrives as loose facets. Welding by position gives an indexed mesh and lets
@@ -140,11 +148,8 @@ that a plain STL viewer would not bother with:
   these arrive about 86 units tall, so a model is rotated to Y-up, scaled to a
   height in metres, centred, and stood on its plinth.
 
-Models are also baked into `objects/models.js` as base64, because the page is
-meant to open straight off the filesystem and `file://` forbids `fetch`. The
-fetch path stays as a fallback, so a new STL appears on a served page without
-rebuilding. That generated file is committed for the same reason `dist/` is: so a
-fresh clone works by double-clicking. It is what makes the page 1.2 MB.
+Models are fetched as they sit on disk, so there is no build step to forget:
+add the file, name it, reload.
 
 Loading is asynchronous and failure is survivable: a missing or malformed STL
 costs a console warning, and the park stands up without it.
@@ -170,10 +175,8 @@ js/stl.js         STL loading: weld, subdivide, auto-fit
 js/shaders.js     the relativistic vertex transform
 js/scene.js       the park
 js/app.js         controls, dynamics, render loop
-objects/          STL models, plus the generated models.js
-tools/serve.mjs   dev server
-tools/bundle.mjs  inlines everything into dist/
-tools/embed-models.mjs   bakes objects/*.stl to base64
+objects/          STL models, fetched at load
+tools/serve.mjs   dev server, no-cache
 ```
 
 Requires WebGL 2.
