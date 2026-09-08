@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Walking Speed of Light</title>
+<title>Relativity Park: Walking Speed of Light</title>
 <meta name="description" content="Special relativity simulator in which light crawls along at a human speed, so Lorentz contraction, aberration and Doppler shift happen at walking pace.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,8 +29,8 @@
   <p class="eyebrow">Your velocity</p>
   <div class="big"><span id="v-speed">0.00</span><span>km/h</span></div>
   <dl class="rows">
-    <div class="row"><dt>&beta; &nbsp;v / c</dt><dd id="v-beta">0.0000</dd></div>
-    <div class="row"><dt>&gamma; &nbsp;Lorentz factor</dt><dd id="v-gamma">1.000</dd></div>
+    <div class="row"><dt>&beta;: &nbsp;v / c</dt><dd id="v-beta">0.0000</dd></div>
+    <div class="row"><dt>&gamma;: &nbsp;Lorentz factor</dt><dd id="v-gamma">1.000</dd></div>
     <div class="row"><dt>Lengths ahead</dt><dd id="v-contract">&times; 1.0000</dd></div>
   </dl>
   <div id="rapidity" aria-hidden="true"><i id="v-rapid"></i></div>
@@ -56,13 +56,13 @@
     <div id="marker"></div>
   </div>
   <p class="caption">
-    <span>Doppler at the crosshair</span>
+    <span>Doppler at crosshair</span>
     <b id="v-dop">1.000</b>
     <span id="v-dopword">at rest</span>
   </p>
 </div>
 
-<div class="hud" id="galilean">Galilean view &mdash; aberration off</div>
+<div class="hud" id="galilean">Galilean view (aberration off)</div>
 
 <p class="hud" id="hint">
   <span><em> Arrows / W A S D</em> walk</span>
@@ -103,12 +103,12 @@
     <label class="check">
       <input type="checkbox" id="fx-aberr" checked>
       <span>Aberration &amp; contraction <kbd>G</kbd>
-        <small>The Lorentz boost of apparent position. Terrell rotation comes with it.</small></span>
+        <small>The Lorentz boost of apparent position.</small></span>
     </label>
     <label class="check">
       <input type="checkbox" id="fx-doppler" checked>
       <span>Doppler color <kbd>C</kbd>
-        <small>Spectra shifted, then re-matched through the CIE observer.</small></span>
+        <small>Spectra blueshifted and redshifted according to motion.</small></span>
     </label>
     <label class="check">
       <input type="checkbox" id="fx-beam" checked>
@@ -126,7 +126,7 @@
     <label class="check">
       <input type="checkbox" id="opt-eye" checked>
       <span>Eye adaptation
-        <small>Your retina adjusts to the average brightness ahead, so beaming reads as a gradient across the view instead of a white-out.</small></span>
+        <small>Your retina adjusts to the average brightness ahead.</small></span>
     </label>
   </fieldset>
 
@@ -153,7 +153,7 @@
       <label class="check">
         <input type="checkbox" id="opt-ground-adapt" checked>
         <span>Adapt to speed
-          <small>Aberration magnifies the view astern by &gamma;(1+&beta;), so the ground is retessellated finer as you approach c. The slider above becomes a floor.</small></span>
+          <small>Retessellate the ground with finer detail as the observer approaches c.</small></span>
       </label>
       <footer><span><span id="v-fps">&mdash;</span> fps</span><span><span id="v-verts">&mdash;</span> vertices</span></footer>
     </div>
@@ -168,32 +168,26 @@
 
   <p>
     Everything you see is computed by tracing light back down your past light cone
-    and boosting it into your moving frame &mdash; the same arithmetic that applies
-    to starlight, just with <b>c</b> turned down to walking pace so you can outrun it.
-  </p>
-
-  <p>
-    Nothing here rubs. Let go of the keys and you keep every scrap of velocity you
-    built up, so you can settle at &beta; = 0.99 and take as long as you like
-    looking around from there. <b>Space</b> is the brake.
+    and boosting it into your moving frame. This is the same arithmetic that applies
+    to starlight, just with <b>c</b> reduced to walking pace, so it can be observed
+    more easily on human scales.
   </p>
 
   <h3>Controls</h3>
   <div class="keys">
-    <div class="keyrow"><kbd>W A S D</kbd><span>walk</span></div>
-    <div class="keyrow"><kbd>&uarr; &darr; &larr; &rarr;</kbd><span>walk</span></div>
+    <div class="keyrow"><kbd>W A S D</kbd><span>accelerate</span></div>
+    <div class="keyrow"><kbd>&uarr; &darr; &larr; &rarr;</kbd><span>accelerate</span></div>
     <div class="keyrow"><kbd>Mouse</kbd><span>look around</span></div>
-    <div class="keyrow"><kbd>Space</kbd><span>brake &mdash; nothing else slows you</span></div>
+    <div class="keyrow"><kbd>Space</kbd><span>brake</span></div>
     <div class="keyrow"><kbd>Q</kbd> <span>drop / <kbd>E</kbd> rise</span></div>
-    <div class="keyrow"><kbd>R</kbd><span>return to the start</span></div>
+    <div class="keyrow"><kbd>R</kbd><span>return to start</span></div>
     <div class="keyrow"><kbd>Tab</kbd><span>settings</span></div>
-    <div class="keyrow"><kbd>Esc</kbd><span>release the mouse</span></div>
+    <div class="keyrow"><kbd>Esc</kbd><span>release mouse</span></div>
   </div>
 
-  <h3>Effects, one key each</h3>
+  <h3>Effects</h3>
   <p>
-    Take them away one at a time rather than all together &mdash; whatever changes
-    when you press a key is that piece of the physics, on its own.
+    Play around with what effect causes which phenomenon to be observed.
   </p>
   <div class="keys">
     <div class="keyrow"><kbd>L</kbd><span>light-travel delay</span></div>
@@ -202,29 +196,27 @@
     <div class="keyrow"><kbd>B</kbd><span>relativistic beaming</span></div>
   </div>
 
-  <h3>Things worth trying</h3>
+  <h3>Things to try</h3>
   <ul>
     <li>
-      Two <b>surveyor's staves</b> lie in the park, both 60 m, both banded every
-      2 m &mdash; thirty bands each. One runs along the corridor, one across it.
-      At rest they match. Run down the corridor and they stop matching: the stave
-      along your path shortens, and its bands narrow with it, while the one across
-      your path keeps its length. You can still count thirty on either.
-      Contraction shortens the metre; it does not take any markings away.
-    </li>
-    <li>
-      Run hard and look behind you. The entire world astern collapses into a
-      small, dim, red disc &mdash; <b>aberration</b> sweeps almost the whole sky
-      into the direction you are travelling.
+      Accelerate by pressing the Up arrow. Your field of view begins to condense
+      in the direction you are traveling, and becomes blueshifted. If you look
+      behind you by using your mouse to turn, that field of view is redshifted
+      and stretched out. This is <b>relativistic aberration</b>.
     </li>
     <li>
       The <b>beacons</b> all flash once per second of world time. Walk toward one
-      and it hurries; walk away and it dawdles. That is the Doppler shift you can
-      count on your fingers.
+      and the flashing speeds up; walk away and it slows down. Also observe the timers
+	  labeled "Your watch" and "World clock", and see how they begin to differ.
     </li>
     <li>
-      Stand still and watch the <b>shuttle</b> run back and forth. It is genuinely
-      shorter when it is moving fastest &mdash; and because light from its far end
+      Two <b>rulers</b> lie in the park, both 60 m, banded red and white every
+      2 m. One runs along the corridor, one across it. When traveling down the
+      corridor at speed, observe the contraction of one ruler relative to the other.
+    </li>
+    <li>
+      Stand still and watch the <b>shuttle</b> run back and forth. It becomes
+      shorter when it is moving the fastest. And because light from its far end
       left earlier than light from its near end, it also looks turned. That
       apparent twist is <b>Terrell rotation</b>.
     </li>
@@ -232,27 +224,19 @@
       The <b>carousel</b> cars are contracted by their own motion, and you see
       each one at a different moment in its trip around the ring. The half of the
       ring running away from you is beamed almost to black while the half coming
-      toward you flares &mdash; the searchlight effect, on a fairground ride.
-    </li>
-    <li>
-      At speed, press <b>G</b> to drop back to Galilean geometry, or <b>L</b>,
-      <b>C</b> and <b>B</b> to take away light-travel delay, Doppler color and
-      beaming one at a time. Whatever changes is exactly that piece of the physics.
-    </li>
-    <li>
-      Let the clocks run apart, then hit <b>R</b>. Your watch is the one that
-      falls behind &mdash; every second of yours is &gamma; seconds of theirs.
+      toward you flares: the relativistic searchlight effect.
     </li>
   </ul>
 
-  <h3>What is being approximated</h3>
+  <h3>A note on Doppler shift</h3>
   <p>
-    The Doppler shift is real spectral work: each surface color is treated as a
+    The rendering of blueshifts and redshifts is, of course, an approximation,
+	especially at extreme blueshift levels. Each surface color is treated as a
     reflectance spectrum under a 5800 K sun, shifted by the Doppler factor, and
-    re-integrated against the CIE 1931 color matching functions. Objects fade to
-    black at extreme speed because the sun has no light left to give at those
-    wavelengths. Beaming uses the bolometric <b>D&#8308;</b>; the tone mapping
-    afterwards is a film curve, not physics.
+    re-integrated against the CIE 1931 color matching functions. At extreme
+	redshifts, the color fades to black. And at extreme blueshifts (past violet)
+	the color turns to a metallic silver to represent x-rays, then to bright white
+	to represent gamma rays (obviously unphysical, but just for a sense of it).
   </p>
 </aside>
 
