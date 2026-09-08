@@ -123,8 +123,8 @@
       const r = rMin * Math.exp(k * v * rings);
       return [[Math.cos(a) * r, 0, Math.sin(a) * r], [0, 1, 0]];
     }, true);
-    // Fill the small hole at the centre.
-    patch(mesh, sectors, 2, color, mat, (u, v) => {
+    // Fill the disc at the centre, where the exponential grading cannot reach.
+    patch(mesh, sectors, 6, color, mat, (u, v) => {
       const a = u * Math.PI * 2;
       return [[Math.cos(a) * rMin * v, 0, Math.sin(a) * rMin * v], [0, 1, 0]];
     }, true);

@@ -71,10 +71,19 @@
     gl.bindVertexArray(null);
     return {
       vao: vao,
+      vbo: vbo,
+      ibo: ibo,
       count: mesh.tris.length,
       type: big ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT,
       verts: mesh.verts.length / STRIDE
     };
+  }
+
+  function disposeMesh(gl, m) {
+    if (!m) return;
+    gl.deleteVertexArray(m.vao);
+    gl.deleteBuffer(m.vbo);
+    gl.deleteBuffer(m.ibo);
   }
 
   function perspective(out, fovyRad, aspect, near) {
@@ -87,5 +96,5 @@
     return out;
   }
 
-  R.gl = { program, uploadMesh, perspective, STRIDE };
+  R.gl = { program, uploadMesh, disposeMesh, perspective, STRIDE };
 })(window.Rel = window.Rel || {});

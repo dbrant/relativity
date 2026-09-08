@@ -86,7 +86,6 @@
   function buildStatic() {
     const m = new geo.Mesh();
 
-    geo.groundDisc(m, 0.3, 4000, 210, 256, C.ground, GROUND);
     geo.mountainRing(m, 1500, 2900, 200, C.hills, MATTE, 7);
 
     // Colonnade down the Z axis.
@@ -174,6 +173,31 @@
     return m;
   }
 
+  /* The ground is the one surface the relativistic transform really punishes.
+   * Its quads are straight lines in world space that the boost bends into
+   * curves, and the faceting error goes as the square of the angular step —
+   * so it gets its own budget, and its own control.
+   *
+   * The radial step is the one that matters: at the old 210x256 it was 1.8x
+   * coarser than the tangential step, which is where the facets came from.
+   * These pairs keep the quads roughly square, and start at 1.2 m rather than
+   * 0.3 m so no rings are wasted on the ground between your feet.
+   */
+  const GROUND_R_MIN = 1.2, GROUND_R_MAX = 4000;
+  const GROUND_LEVELS = [
+    { label: 'Low', rings: 200, sectors: 160 },
+    { label: 'Medium', rings: 340, sectors: 264 },
+    { label: 'High', rings: 520, sectors: 400 },
+    { label: 'Very high', rings: 780, sectors: 600 }
+  ];
+
+  function buildGround(level) {
+    const L = GROUND_LEVELS[Math.max(0, Math.min(GROUND_LEVELS.length - 1, level | 0))];
+    const m = new geo.Mesh();
+    geo.groundDisc(m, GROUND_R_MIN, GROUND_R_MAX, L.rings, L.sectors, C.ground, GROUND);
+    return m;
+  }
+
   function buildSky() {
     const m = new geo.Mesh();
     geo.skyDome(m, 6000, 180, 90);
@@ -181,7 +205,7 @@
   }
 
   R.scene = {
-    buildStatic, buildCarousel, buildShuttle, buildSky,
+    buildStatic, buildCarousel, buildShuttle, buildSky, buildGround, GROUND_LEVELS,
     CAROUSEL, SHUTTLE, BEACONS,
     start: { x: 0, y: 1.7, z: 46, yaw: 0, pitch: -0.02 }
   };

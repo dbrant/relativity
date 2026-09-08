@@ -17,6 +17,7 @@
     beamExp: 4.0,
     exposure: 1.0,
     started: false,
+    groundDetail: 2,
     eyeAdapt: true,
     adapt: 1.0,                  // current state of the observer's eye
     resScale: 1.0,
@@ -229,6 +230,7 @@
     R3.progShuttle = GL.program(g, variant(SH.VERT, '#define MOTION 2\n'), SH.FRAG_WORLD, 'shuttle');
 
     R3.mWorld = GL.uploadMesh(g, R3.progWorld, SCENE.buildStatic());
+    R3.mGround = GL.uploadMesh(g, R3.progWorld, SCENE.buildGround(S.groundDetail));
     R3.mSky = GL.uploadMesh(g, R3.progSky, SCENE.buildSky());
     R3.mCar = GL.uploadMesh(g, R3.progCar, SCENE.buildCarousel());
     R3.mShuttle = GL.uploadMesh(g, R3.progShuttle, SCENE.buildShuttle());
@@ -242,7 +244,22 @@
     g.disable(g.CULL_FACE);           // Terrell rotation shows you faces that
     g.depthFunc(g.LEQUAL);            // were pointing away; never cull them.
     g.enable(g.DEPTH_TEST);
-    return R3.mWorld.verts + R3.mSky.verts + R3.mCar.verts + R3.mShuttle.verts;
+  }
+
+  function totalVerts() {
+    return [R3.mWorld, R3.mGround, R3.mSky, R3.mCar, R3.mShuttle]
+      .reduce((n, m) => n + (m ? m.verts : 0), 0);
+  }
+
+  /* Swapping ground tessellation means replacing one VBO, not reloading. */
+  function setGroundDetail(level) {
+    level = Math.max(0, Math.min(SCENE.GROUND_LEVELS.length - 1, Math.round(level)));
+    if (R3.mGround && level === S.groundDetail) return;
+    S.groundDetail = level;
+    GL.disposeMesh(glc, R3.mGround);
+    R3.mGround = GL.uploadMesh(glc, R3.progWorld, SCENE.buildGround(level));
+    const el = document.getElementById('v-verts');
+    if (el) el.textContent = (totalVerts() / 1000).toFixed(0) + 'k';
   }
 
   function resize() {
@@ -332,6 +349,7 @@
 
     setCommon(R3.progWorld, kin, bd);
     drawMesh(R3.mWorld);
+    drawMesh(R3.mGround);
 
     const K = SCENE.CAROUSEL;
     const carOmega = (K.beta * S.c) / K.radius;
@@ -458,6 +476,8 @@
     slider('opt-exposure', 'opt-exposure-out', v => { S.exposure = v; }, v => v.toFixed(2));
     slider('opt-beam', 'opt-beam-out', v => { S.beamExp = v; }, v => 'D^' + v.toFixed(1));
     slider('opt-res', 'opt-res-out', v => { S.resScale = v; }, v => Math.round(v * 100) + '%');
+    slider('opt-ground', 'opt-ground-out', setGroundDetail,
+      v => SCENE.GROUND_LEVELS[Math.round(v)].label);
 
     document.getElementById('opt-eye').addEventListener('change', e => {
       S.eyeAdapt = e.target.checked;
@@ -504,8 +524,8 @@
     };
 
     try {
-      const verts = initGL();
-      document.getElementById('v-verts').textContent = (verts / 1000).toFixed(0) + 'k';
+      initGL();
+      document.getElementById('v-verts').textContent = (totalVerts() / 1000).toFixed(0) + 'k';
     } catch (err) {
       document.getElementById('overlay-title').textContent = 'Cannot start';
       document.getElementById('overlay-body').textContent = err.message;

@@ -58,9 +58,17 @@ become 5. There is no drag term: release the keys and you coast.
 
 ## Deliberate choices
 
-- **Everything is heavily tessellated** (~118k vertices). The transform is applied
-  per vertex and is strongly non-linear, so straight edges genuinely bend. A cube
-  drawn with eight vertices would still look like a cube at 0.9c, which is a lie.
+- **Everything is heavily tessellated** (~275k vertices by default). The transform
+  is applied per vertex and is strongly non-linear, so straight edges genuinely
+  bend. A cube drawn with eight vertices would still look like a cube at 0.9c,
+  which is a lie.
+- **The ground gets its own budget.** It is the surface the transform punishes
+  hardest — a flat plane of straight edges that the boost bends into curves, where
+  the faceting error goes as the square of the angular step. It is a polar disc
+  graded exponentially from 1.2 m to 4 km, tessellated so the quads stay square
+  (the radial step used to be 1.8x the tangential one, and that was where the
+  facets came from).  in Settings swaps the mesh live, from 33k
+  vertices to 474k.
 - **Backface culling is off.** Terrell rotation shows you faces that are pointing
   away from you; culling them would delete the effect.
 - **Logarithmic depth.** The apparent scene spans centimetres to tens of
