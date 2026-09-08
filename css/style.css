@@ -413,12 +413,6 @@ button {
 
 #overlay.is-hidden { opacity: 0; pointer-events: none; }
 
-/* Returning after Esc: a resume prompt, not the introduction again. */
-#overlay.is-paused .card { padding: 17px 26px 15px; }
-#overlay.is-paused h2 { font-size: 15px; margin-bottom: 0; }
-#overlay.is-paused #overlay-body { display: none; }
-#overlay.is-paused .cue { margin-top: 11px; }
-
 #overlay .card {
   max-width: 400px;
   padding: 26px 30px 24px;

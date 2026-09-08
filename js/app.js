@@ -16,7 +16,6 @@
     fx: { delay: true, aberr: true, doppler: true, beam: true },
     beamExp: 4.0,
     exposure: 1.0,
-    started: false,
     groundDetail: 2,        // the floor the user chooses
     groundActive: 2,        // what is actually drawn right now
     groundAdaptive: true,
@@ -93,7 +92,6 @@
      * Some browsers and embedding contexts refuse the lock, and tying the
      * overlay to it would leave you staring at an undismissable card. */
     const begin = () => {
-      S.started = true;
       hud.overlay.classList.add('is-hidden');
       hud.hint.classList.remove('is-faded');
       if (!document.pointerLockElement && canvas.requestPointerLock) {
@@ -122,17 +120,13 @@
     hud.overlay.addEventListener('click', begin);
     canvas.addEventListener('click', begin);
 
+    // Losing the lock is not an event worth interrupting anyone for: the world
+    // keeps running either way, the keys still work, and clicking takes the
+    // mouse back. So nothing happens here but tidying the intro away.
     document.addEventListener('pointerlockchange', () => {
       if (document.pointerLockElement === canvas) {
         hud.overlay.classList.add('is-hidden');
         hud.hint.classList.remove('is-faded');
-      } else if (S.started) {
-        // Esc gave the mouse back. Return as a small resume prompt rather than
-        // replaying the introduction.
-        hud.overlay.classList.remove('is-hidden');
-        hud.overlay.classList.add('is-paused');
-        hud.overlayTitle.textContent = 'Paused';
-        hud.overlayCue.textContent = 'Click to resume';
       }
     });
 
@@ -534,8 +528,6 @@
     canvas = document.getElementById('view');
     hud = {
       overlay: document.getElementById('overlay'),
-      overlayTitle: document.getElementById('overlay-title'),
-      overlayCue: document.getElementById('overlay-cue'),
       hint: document.getElementById('hint'),
       panel: document.getElementById('panel'),
       help: document.getElementById('help'),
