@@ -11,8 +11,9 @@ happen at a pace you can feel in your legs.
 No dependencies, no build step. Open `index.html`.
 
 ```
-node tools/serve.mjs        # http://localhost:8123
-node tools/bundle.mjs       # dist/index.html — one self-contained file
+node tools/serve.mjs         # http://localhost:8123
+node tools/bundle.mjs        # dist/index.html — one self-contained file
+node tools/embed-models.mjs  # after adding or changing an STL
 ```
 
 ## What it actually computes
@@ -117,6 +118,36 @@ become 5. There is no drag term: release the keys and you coast.
 | the beacons | all flash once per second of *world* time; their apparent rate is a Doppler readout you can count |
 | the carousel | cars contracted by their own motion, each seen at a different retarded moment; the receding half is beamed nearly to black |
 | the shuttle | slides along X, so its contraction breathes in and out as it goes |
+| two sculptures | STL models on plinths, flanking the colonnade |
+
+## STL models
+
+Drop an `.stl` into `objects/` (binary or ASCII), add an entry to `MODELS` in
+`js/scene.js`, and run `node tools/embed-models.mjs`. Three things happen to it
+that a plain STL viewer would not bother with:
+
+- **Weld.** STL stores each triangle's corners independently, so a closed model
+  arrives as loose facets. Welding by position gives an indexed mesh and lets
+  facet normals be averaged into smooth shading — area-weighted, so slivers do
+  not sway the average.
+- **Subdivide.** The transform is per vertex and bends straight edges into
+  curves, so a long edge is drawn as a chord of the curve it should be. Splitting
+  is uniform 4-way through a shared midpoint cache, so neighbours split
+  identically and no T-junctions open up at speed. It repeats while the longest
+  edge exceeds 22 cm, under a 60k-triangle budget so a coarse model cannot run
+  away. The bunny lands at 13,934 vertices, one level in.
+- **Fit.** STL carries no units and no agreed up-axis. Blender writes Z-up and
+  these arrive about 86 units tall, so a model is rotated to Y-up, scaled to a
+  height in metres, centred, and stood on its plinth.
+
+Models are also baked into `objects/models.js` as base64, because the page is
+meant to open straight off the filesystem and `file://` forbids `fetch`. The
+fetch path stays as a fallback, so a new STL appears on a served page without
+rebuilding. That generated file is committed for the same reason `dist/` is: so a
+fresh clone works by double-clicking. It is what makes the page 1.2 MB.
+
+Loading is asynchronous and failure is survivable: a missing or malformed STL
+costs a console warning, and the park stands up without it.
 
 ## Controls
 
@@ -135,11 +166,14 @@ css/style.css
 js/glutil.js      WebGL2 helpers
 js/color.js       CIE colour matching, Doppler LUT
 js/geometry.js    tessellated mesh builders
+js/stl.js         STL loading: weld, subdivide, auto-fit
 js/shaders.js     the relativistic vertex transform
 js/scene.js       the park
 js/app.js         controls, dynamics, render loop
+objects/          STL models, plus the generated models.js
 tools/serve.mjs   dev server
 tools/bundle.mjs  inlines everything into dist/
+tools/embed-models.mjs   bakes objects/*.stl to base64
 ```
 
 Requires WebGL 2.

@@ -7,11 +7,15 @@
  * USB stick, attach it to an email.
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const read = p => readFileSync(resolve(root, p), 'utf8');
+
+// Refresh the baked-in models first, so a changed STL cannot go stale in dist.
+execFileSync(process.execPath, [resolve(root, 'tools/embed-models.mjs')], { stdio: 'inherit' });
 
 let html = read('index.html');
 
@@ -21,7 +25,7 @@ html = html.replace(
 );
 
 html = html.replace(
-  /<script src="(js\/[^"]+)"><\/script>/g,
+  /<script src="((?:js|objects)\/[^"]+)"><\/script>/g,
   (_, src) => '<script>\n' + read(src).trimEnd() + '\n</script>'
 );
 

@@ -121,6 +121,7 @@
       const x = (r() - 0.5) * 150;
       const z = (r() - 0.5) * 190;
       if (Math.abs(x) < 13 || (Math.abs(x - 30) < 12 && Math.abs(z - 6) < 12)) continue;
+      if (MODELS.some(o => Math.hypot(x - o.x, z - o.z) < 4)) continue;
       const s = 0.7 + r() * 2.1;
       geo.box(m, x, s / 2, z, s, s, s * (0.7 + r() * 0.7), CUBES[(r() * CUBES.length) | 0], MATTE);
     }
@@ -135,6 +136,14 @@
     flatRing(m, CAROUSEL.cx, CAROUSEL.cz, CAROUSEL.radius - 1.1, CAROUSEL.radius + 1.1, 0.06, C.stoneDark, MATTE);
     geo.cylinder(m, CAROUSEL.cx, 0, CAROUSEL.cz, 1.0, 3.2, C.stone, MATTE, 20);
 
+    // Plinths for the sculptures, so they read as objects placed in a park
+    // rather than dropped on the pavement.
+    for (const s of MODELS) {
+      geo.box(m, s.x, s.y / 2, s.z, 1.9, s.y, 1.9, C.stone, MATTE);
+      geo.box(m, s.x, s.y + 0.06, s.z, 2.25, 0.12, 2.25, C.stoneDark, MATTE);
+      geo.box(m, s.x, 0.07, s.z, 2.4, 0.14, 2.4, C.stoneDark, MATTE);
+    }
+
     // Shuttle rail.
     geo.box(m, SHUTTLE.bx, 0.12, SHUTTLE.bz, SHUTTLE.amp * 2 + 16, 0.24, 2.8, C.stoneDark, MATTE);
 
@@ -144,6 +153,15 @@
   const BEACONS = [
     [3.2, 22, 3.0], [3.2, -4, 3.0], [3.2, -34, 3.0], [3.2, -70, 3.0],
     [-3.2, 46, 3.0], [-3.2, 84, 3.0], [-3.2, 132, 3.0]
+  ];
+
+  /* STL sculptures, one either side of the colonnade. Loaded asynchronously and
+   * auto-fitted to a height in metres, so the park stands up before they arrive. */
+  const MODELS = [
+    { file: 'bunny.stl', x: -17, z: 4, y: 1.1, height: 2.6, yaw: 2.1,
+      color: rgb('#D8D2C2'), mat: [0, 0, 0] },
+    { file: 'dragon.stl', x: 17, z: 4, y: 1.1, height: 2.2, yaw: -1.9,
+      color: rgb('#9C7A46'), mat: [3, 0, 0] }
   ];
 
   const CAROUSEL = { cx: 30, cz: 6, radius: 6.0, cars: 8, beta: 0.74, bound: 8.0 };
@@ -226,7 +244,7 @@
   }
 
   R.scene = {
-    buildStatic, buildCarousel, buildShuttle, buildSky, buildGround, GROUND_LEVELS,
+    buildStatic, buildCarousel, buildShuttle, buildSky, buildGround, GROUND_LEVELS, MODELS,
     adaptiveGroundLevel,
     CAROUSEL, SHUTTLE, BEACONS,
     start: { x: 0, y: 1.7, z: 46, yaw: 0, pitch: -0.02 }

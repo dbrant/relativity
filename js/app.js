@@ -252,7 +252,7 @@
   }
 
   function totalVerts() {
-    return [R3.mWorld, R3.mGround, R3.mSky, R3.mCar, R3.mShuttle]
+    return [R3.mWorld, R3.mGround, R3.mSky, R3.mCar, R3.mShuttle, R3.mModels]
       .reduce((n, m) => n + (m ? m.verts : 0), 0);
   }
 
@@ -372,6 +372,7 @@
 
     setCommon(R3.progWorld, kin, bd);
     drawMesh(R3.mWorld);
+    if (R3.mModels) drawMesh(R3.mModels);
 
     // The ground is a tessellation carrier, not scenery: its grid and mottle
     // are computed from world coordinates in the fragment shader, so sliding
@@ -529,6 +530,37 @@
     hud.spectrum.style.background = 'linear-gradient(90deg, ' + css + ')';
   }
 
+  /* Models arrive after the first frame. The park is complete without them, so
+   * a missing or malformed STL costs a console line and nothing else. */
+  function loadModels() {
+    const specs = SCENE.MODELS || [];
+    if (!specs.length) return;
+    Promise.all(specs.map(spec =>
+      R.stl.fetchModel(spec.file)
+        .then(buf => ({ spec, pos: R.stl.parse(buf) }))
+        .catch(err => {
+          console.warn('Skipping ' + spec.file + ': ' + err.message);
+          return null;
+        })
+    )).then(loaded => {
+      const mesh = new R.geo.Mesh();
+      let placed = 0;
+      for (const item of loaded) {
+        if (!item) continue;
+        try {
+          R.stl.addToMesh(mesh, item.pos, item.spec);
+          placed++;
+        } catch (err) {
+          console.warn('Skipping ' + item.spec.file + ': ' + err.message);
+        }
+      }
+      if (!placed) return;
+      R3.mModels = GL.uploadMesh(glc, R3.progWorld, mesh);
+      const el = document.getElementById('v-verts');
+      if (el) el.textContent = (totalVerts() / 1000).toFixed(0) + 'k';
+    });
+  }
+
   // --------------------------------------------------------------------- go -
   function boot() {
     canvas = document.getElementById('view');
@@ -566,6 +598,7 @@
     paintSpectrum();
     bindControls();
     setupInput();
+    loadModels();
 
     let last = performance.now(), acc = 0, frames = 0, hudAcc = 0;
     function frame(now) {
