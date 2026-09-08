@@ -200,6 +200,8 @@ uniform float uBeamOn;
 uniform float uBeamExp;
 uniform float uExposure;
 uniform float uBeaconRate;
+uniform vec3  uBandColor;
+uniform float uBandWidth;
 
 out vec4 fragColor;
 
@@ -254,6 +256,20 @@ float fbm(vec2 p) {
 `;
 
   const FRAG_WORLD = FRAG_COMMON + `
+/* Stripes measured in world metres, so both staves are banded identically and
+ * every edge is sharp and every band the same width. Vertex colours could not do
+ * that: a band edge only landed where a vertex happened to be, and interpolation
+ * then smeared it across a whole segment — 42% of a band.
+ *
+ * The width of the smoothstep is one screen pixel via fwidth, so the edge stays
+ * crisp up close and averages to flat colour far away instead of shimmering. */
+float bandMask(float u) {
+  float t = u / uBandWidth;
+  float w = max(fwidth(t), 1e-5);
+  float s = abs(fract(t * 0.5) - 0.5) * 2.0;
+  return smoothstep(0.5 - w, 0.5 + w, s);
+}
+
 /* Antialiased grid lines, measured in real metres on the ground. */
 float gridLine(vec2 p, float step) {
   vec2 c = p / step;
@@ -275,6 +291,11 @@ void main() {
   // as a flash rather than as a bright object getting slightly brighter. Its
   // vertex colour is kept for the light it emits, not for the glass.
   if (beacon) base = vec3(0.012);
+
+  // Surveyor's banding, along X or along Z.
+  if (kind > 4.5 && kind < 6.5) {
+    base = mix(base, uBandColor, bandMask(kind < 5.5 ? vWorldPos.x : vWorldPos.z));
+  }
 
   if (kind > 0.5 && kind < 1.5) {
     base *= fbm(vWorldPos.xz * 0.035) * 0.22 + 0.89;
@@ -300,8 +321,11 @@ void main() {
     radiance += vColor * (0.015 + 34.0 * pulse);
   }
 
+  // The hills sit 1.5 to 2.9 km out, where full haze leaves them almost pure
+  // sky. They keep a third of it, so they read as distant rather than dissolved.
+  float fogWeight = (kind > 7.5) ? 0.32 : 0.94;
   float fog = 1.0 - exp(-vDist * uFogDensity);
-  radiance = mix(radiance, uHaze * 1.05, fog * 0.94);
+  radiance = mix(radiance, uHaze * 1.05, fog * fogWeight);
 
   fragColor = present(radiance);
 }

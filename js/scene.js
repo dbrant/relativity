@@ -34,7 +34,7 @@
     copper: rgb('#B4703A'),
     staveA: rgb('#EDE7D8'),
     staveB: rgb('#B03A2E'),
-    hills: rgb('#5C6B70'),
+    hills: rgb('#3D5B41'),
     beacon: rgb('#FFD9A0'),
     shuttle: rgb('#E9EDF0'),
     shuttleTrim: rgb('#2E5E8C'),
@@ -44,6 +44,10 @@
 
   // [kind, motionPhase, blinkPhase]
   const MATTE = [0, 0, 0], GROUND = [1, 0, 0], POLISH = [3, 0, 0];
+  // Banding is drawn per fragment from world position; 5 measures along X, 6
+  // along Z. 8 is distant terrain, which takes less of the haze.
+  const BAND_X = [5, 0, 0], BAND_Z = [6, 0, 0], HILLS = [8, 0, 0];
+  const BAND_WIDTH = 2.0;
   const beaconMat = blink => [2, 0, blink];
 
   /* Deterministic scatter so the layout is the same every time you load it. */
@@ -65,15 +69,10 @@
 
   /* A surveyor's levelling stave: alternating half-metre bands, so its length is
    * something you can literally count off. */
-  function stave(mesh, cx, cy, cz, length, axis, band) {
-    const along = axis === 'z' ? 2 : 0;
+  function stave(mesh, cx, cy, cz, length, axis) {
     const sx = axis === 'z' ? 0.9 : length;
     const sz = axis === 'z' ? length : 0.9;
-    const origin = axis === 'z' ? cz : cx;
-    geo.box(mesh, cx, cy, cz, sx, 0.9, sz, C.staveA, MATTE, (x, y, z) => {
-      const t = ((along === 2 ? z : x) - origin + length / 2) / band;
-      return (Math.floor(t + 1e-4) & 1) ? C.staveB : C.staveA;
-    });
+    geo.box(mesh, cx, cy, cz, sx, 0.9, sz, C.staveA, axis === 'z' ? BAND_Z : BAND_X);
     // Posts holding it up.
     const n = Math.max(2, Math.round(length / 12));
     for (let i = 0; i <= n; i++) {
@@ -87,7 +86,7 @@
   function buildStatic() {
     const m = new geo.Mesh();
 
-    geo.mountainRing(m, 1500, 2900, 200, C.hills, MATTE, 7);
+    geo.mountainRing(m, 1500, 2900, 200, C.hills, HILLS, 7);
 
     // Colonnade down the Z axis.
     for (let i = -10; i <= 10; i++) {
@@ -107,8 +106,8 @@
     }
 
     // The matched pair of staves. Identical, one along each axis.
-    stave(m, -22, 2.3, 0, 60, 'z', 2.0);
-    stave(m, 0, 2.3, -46, 60, 'x', 2.0);
+    stave(m, -22, 2.3, 0, 60, 'z');
+    stave(m, 0, 2.3, -46, 60, 'x');
 
     // Obelisk, banded horizontally, closing the corridor.
     geo.box(m, 0, 0, -96, 3.4, 34, 3.4, C.basalt, MATTE,
@@ -159,7 +158,7 @@
    * auto-fitted to a height in metres, so the park stands up before they arrive. */
   const MODELS = [
     { file: 'bunny.stl', x: -17, z: 4, y: 1.1, height: 2.6, yaw: 2.1,
-      color: rgb('#D8D2C2'), mat: [0, 0, 0] },
+      color: rgb('#9AA0A0'), mat: [0, 0, 0] },
     { file: 'dragon.stl', x: 17, z: 4, y: 1.1, height: 2.2, yaw: -1.9,
       color: rgb('#9C7A46'), mat: [3, 0, 0] }
   ];
@@ -245,6 +244,7 @@
 
   R.scene = {
     buildStatic, buildCarousel, buildShuttle, buildSky, buildGround, GROUND_LEVELS, MODELS,
+    BAND_COLOR: C.staveB, BAND_WIDTH,
     adaptiveGroundLevel,
     CAROUSEL, SHUTTLE, BEACONS,
     start: { x: 0, y: 1.7, z: 46, yaw: 0, pitch: -0.02 }

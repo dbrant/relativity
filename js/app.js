@@ -316,6 +316,8 @@
     g.uniform3fv(u.uHaze, SKY.haze);
     g.uniform1f(u.uFogDensity, FOG_DENSITY);
     g.uniform1f(u.uBeaconRate, BEACON_RATE);
+    g.uniform3fv(u.uBandColor, SCENE.BAND_COLOR);
+    g.uniform1f(u.uBandWidth, SCENE.BAND_WIDTH);
 
     g.activeTexture(g.TEXTURE0);
     g.bindTexture(g.TEXTURE_2D, R3.lut.tex);
