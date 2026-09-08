@@ -98,8 +98,10 @@
       }
     }
 
-    // Arches over the colonnade.
-    for (const z of [24, 0, -24]) {
+    // Arches over the colonnade, standing in the GAPS between columns. The arch
+    // passes y = 4.1 m where it crosses x = 8, which is halfway up a column, so
+    // sharing a z with one buries it in the stonework.
+    for (const z of [20, -4, -28]) {
       geo.torusXY(m, 0, 0, z, 9.0, 0.42, C.copper, POLISH, 96, 14);
     }
 

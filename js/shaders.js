@@ -249,6 +249,12 @@ void main() {
 
   float kind = vMat.x;
   vec3 base = vColor;
+  bool beacon = (kind > 1.5 && kind < 2.5);
+
+  // A beacon's lamp glass is nearly black when it is dark, so the flash reads
+  // as a flash rather than as a bright object getting slightly brighter. Its
+  // vertex colour is kept for the light it emits, not for the glass.
+  if (beacon) base = vec3(0.012);
 
   if (kind > 0.5 && kind < 1.5) {
     base *= fbm(vWorldPos.xz * 0.035) * 0.22 + 0.89;
@@ -268,10 +274,10 @@ void main() {
   // Beacons blink on a fixed world-frame schedule. Because that schedule is
   // evaluated at the EMISSION time, their apparent rate is Doppler shifted for
   // free — walk toward one and watch it speed up.
-  if (kind > 1.5 && kind < 2.5) {
+  if (beacon) {
     float ph = vTEmit * uBeaconRate + vMat.y;
     float pulse = pow(0.5 + 0.5 * sin(6.28318530718 * ph), 14.0);
-    radiance += vColor * (0.35 + 26.0 * pulse);
+    radiance += vColor * (0.015 + 34.0 * pulse);
   }
 
   float fog = 1.0 - exp(-vDist * uFogDensity);
