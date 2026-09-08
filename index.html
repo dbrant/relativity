@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Walking Speed of Light</title>
-<meta name="description" content="A special relativity simulator in which light crawls along at 5 km/h, so Lorentz contraction, aberration and Doppler shift happen at walking pace.">
+<meta name="description" content="Special relativity simulator in which light crawls along at a human speed, so Lorentz contraction, aberration and Doppler shift happen at walking pace.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@400;500&family=Saira+Condensed:wght@500;600;700&display=swap">
@@ -65,7 +65,7 @@
 <div class="hud" id="galilean">Galilean view &mdash; aberration off</div>
 
 <p class="hud" id="hint">
-  <span><em>W A S D</em> walk</span>
+  <span><em> Arrows / W A S D</em> walk</span>
   <span><em>Mouse</em> look</span>
   <span><em>Space</em> brake</span>
   <span><em>L G C B</em> toggle effects</span>
@@ -76,10 +76,12 @@
   <div class="card">
     <h2 id="overlay-title">Light is slow here</h2>
     <p id="overlay-body">
-      In this park the speed of light is 5 kilometres an hour &mdash; a brisk walk.
-      Break into a run and the world in front of you crowds together and turns blue,
-      the world behind you reddens and falls away, and your watch starts losing
-      time against the clocks around you.
+      In this park, the speed of light is 5 kilometers per hour &mdash; a brisk walk.
+      Just like in the real world, the speed of light is not attainable, only approachable asymptotically.
+      The more you speed up, the more relativistic effects will become apparent:
+      length contraction, time dilation, Terrell rotation, etc. The Doppler effect of light
+      also becomes apparent, with objects in front of you blueshifted, objects behind you
+      redshifted, and transverse Doppler effects visible on objects in motion.
     </p>
     <p class="cue">Click to look around</p>
   </div>
@@ -105,7 +107,7 @@
     </label>
     <label class="check">
       <input type="checkbox" id="fx-doppler" checked>
-      <span>Doppler colour <kbd>C</kbd>
+      <span>Doppler color <kbd>C</kbd>
         <small>Spectra shifted, then re-matched through the CIE observer.</small></span>
     </label>
     <label class="check">
@@ -117,24 +119,24 @@
 
   <fieldset>
     <legend class="eyebrow">World</legend>
+    <div class="slider">
+      <div class="top"><label for="opt-c">Speed of light</label><output id="opt-c-out">5.0 km/h</output></div>
+      <input type="range" id="opt-c" min="1" max="40" step="0.5" value="5">
+    </div>
     <label class="check">
       <input type="checkbox" id="opt-eye" checked>
       <span>Eye adaptation
         <small>Your retina adjusts to the average brightness ahead, so beaming reads as a gradient across the view instead of a white-out.</small></span>
     </label>
-    <div class="slider">
-      <div class="top"><label for="opt-c">Speed of light</label><output id="opt-c-out">5.0 km/h</output></div>
-      <input type="range" id="opt-c" min="1" max="40" step="0.5" value="5">
-    </div>
-    <div class="slider">
-      <div class="top"><label for="opt-beam">Beaming exponent</label><output id="opt-beam-out">D^4.0</output></div>
-      <input type="range" id="opt-beam" min="0" max="4" step="0.1" value="4">
-    </div>
   </fieldset>
 
   <details id="debug">
     <summary>Debug</summary>
     <div class="debug-body">
+      <div class="slider">
+        <div class="top"><label for="opt-beam">Beaming exponent</label><output id="opt-beam-out">D^4.0</output></div>
+        <input type="range" id="opt-beam" min="0" max="4" step="0.1" value="4">
+      </div>
       <div class="slider">
         <div class="top"><label for="opt-exposure">Exposure</label><output id="opt-exposure-out">1.00</output></div>
         <input type="range" id="opt-exposure" min="0.2" max="2.5" step="0.05" value="1">
@@ -196,7 +198,7 @@
   <div class="keys">
     <div class="keyrow"><kbd>L</kbd><span>light-travel delay</span></div>
     <div class="keyrow"><kbd>G</kbd><span>aberration &amp; contraction</span></div>
-    <div class="keyrow"><kbd>C</kbd><span>Doppler colour</span></div>
+    <div class="keyrow"><kbd>C</kbd><span>Doppler color</span></div>
     <div class="keyrow"><kbd>B</kbd><span>relativistic beaming</span></div>
   </div>
 
@@ -231,7 +233,7 @@ The <b>carousel</b> cars are contracted by their own motion, and you see each
     </li>
     <li>
       At speed, press <b>G</b> to drop back to Galilean geometry, or <b>L</b>,
-      <b>C</b> and <b>B</b> to take away light-travel delay, Doppler colour and
+      <b>C</b> and <b>B</b> to take away light-travel delay, Doppler color and
       beaming one at a time. Whatever changes is exactly that piece of the physics.
     </li>
     <li>
@@ -242,9 +244,9 @@ The <b>carousel</b> cars are contracted by their own motion, and you see each
 
   <h3>What is being approximated</h3>
   <p>
-    The Doppler shift is real spectral work: each surface colour is treated as a
+    The Doppler shift is real spectral work: each surface color is treated as a
     reflectance spectrum under a 5800 K sun, shifted by the Doppler factor, and
-    re-integrated against the CIE 1931 colour matching functions. Objects fade to
+    re-integrated against the CIE 1931 color matching functions. Objects fade to
     black at extreme speed because the sun has no light left to give at those
     wavelengths. Beaming uses the bolometric <b>D&#8308;</b>; the tone mapping
     afterwards is a film curve, not physics.

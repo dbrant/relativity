@@ -155,10 +155,11 @@
   ];
 
   /* STL sculptures, one either side of the colonnade. Loaded asynchronously and
-   * auto-fitted to a height in metres, so the park stands up before they arrive. */
+   * auto-fitted to a height in metres, so the park stands up before they arrive.
+   * Materials include: [0, 0, 0] (matte), [3, 0, 0] (shiny), etc. */
   const MODELS = [
     { file: 'bunny.stl', x: -17, z: 4, y: 1.1, height: 2.6, yaw: 2.1,
-      color: rgb('#9AA0A0'), mat: [0, 0, 0] },
+      color: rgb('#9AA0A0'), mat: [3, 0, 0] },
     { file: 'dragon.stl', x: 17, z: 4, y: 1.1, height: 2.2, yaw: -1.9,
       color: rgb('#9C7A46'), mat: [3, 0, 0] }
   ];
