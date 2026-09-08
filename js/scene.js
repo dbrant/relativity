@@ -145,8 +145,8 @@
     [-3.2, 46, 3.0], [-3.2, 84, 3.0], [-3.2, 132, 3.0]
   ];
 
-  const CAROUSEL = { cx: 30, cz: 6, radius: 6.0, cars: 8, beta: 0.74 };
-  const SHUTTLE = { bx: 0, by: 0, bz: -62, amp: 11, beta: 0.88 };
+  const CAROUSEL = { cx: 30, cz: 6, radius: 6.0, cars: 8, beta: 0.74, bound: 8.0 };
+  const SHUTTLE = { bx: 0, by: 0, bz: -62, amp: 11, beta: 0.88, bound: 20.0 };
 
   /* Carousel cars in car-local coordinates: +x along the track, +y up,
    * +z radially outward. The shader spins and contracts them. */

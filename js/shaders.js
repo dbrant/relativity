@@ -40,7 +40,7 @@ uniform float uUseAberr;   // 1 = boost apparent positions into the moving frame
 uniform vec3  uOffset;     // rigid shift, so the ground disc can follow the eye
 
 uniform vec4 uMotionA;     // carousel (cx,cy,cz, trackRadius) | shuttle (bx,by,bz, amplitude)
-uniform vec4 uMotionB;     // (omega, restGamma, -, -)
+uniform vec4 uMotionB;     // (omega, restGamma, boundRadius, -)
 
 out vec3  vWorldPos;
 out vec3  vNormal;
@@ -85,22 +85,42 @@ void motionAt(float t, out vec3 p, out vec3 v, out vec3 n) {
 }
 #endif
 
-/* Solve  |p(t - a) - eye| = c * a  for the light-travel delay a. */
+/* Solve  g(a) = a - |p(t - a) - eye| / c = 0  for the light-travel delay.
+ *
+ * Newton on its own is not safe here. g'(a) = 1 + (v.n)/c, and the corners of a
+ * carousel car travel at 0.857c — faster than the track, because the car has
+ * width — so g' can fall to 0.14. One step then flings the iterate most of the
+ * way around the orbit, and since every vertex solves independently, neighbours
+ * land on completely different revolutions. That is what the dancing triangles
+ * were.
+ *
+ * So bracket it. Every point of a mover stays within uMotionB.z of its reference
+ * point, which traps the delay in [(d - bound)/c, (d + bound)/c]; and g is
+ * strictly increasing because |v| < c always. Bisection therefore cannot fail,
+ * and Newton is used only when it lands inside the bracket, to make it quick.
+ */
 float solveDelay() {
   vec3 p, v, n;
+#if MOTION == 0
   motionAt(uT, p, v, n);
-  float a = length(p - uObsPos) / uC;
-#if MOTION != 0
-  for (int i = 0; i < 6; ++i) {
+  return length(p - uObsPos) / uC;
+#else
+  float d  = length(uMotionA.xyz - uObsPos);
+  float lo = max(0.0, (d - uMotionB.z) / uC);
+  float hi = (d + uMotionB.z) / uC;
+  float a  = 0.5 * (lo + hi);
+  for (int i = 0; i < 24; ++i) {
     motionAt(uT - a, p, v, n);
     vec3 r = p - uObsPos;
     float rl = max(length(r), 1e-5);
-    float f  = a - rl / uC;
-    float fp = 1.0 + dot(v, r / rl) / uC;   // stays positive while |v| < c
-    a -= f / max(fp, 0.02);
+    float g = a - rl / uC;
+    if (g > 0.0) hi = a; else lo = a;
+    float gp = 1.0 + dot(v, r / rl) / uC;
+    float an = a - g / max(gp, 0.05);
+    a = (an > lo && an < hi) ? an : 0.5 * (lo + hi);
   }
-#endif
   return max(a, 0.0);
+#endif
 }
 
 void main() {

@@ -601,7 +601,7 @@ legend { padding: 0 0 8px; }
 
 <header class="hud" id="masthead">
   <h1>Walking Speed of Light</h1>
-  <p>Special relativity with <b>c = 5 km/h</b></p>
+  <p>Special relativity with <b id="v-c">c = 5 km/h</b></p>
 </header>
 
 <nav class="hud" id="tools">
@@ -1293,7 +1293,7 @@ uniform float uUseAberr;   // 1 = boost apparent positions into the moving frame
 uniform vec3  uOffset;     // rigid shift, so the ground disc can follow the eye
 
 uniform vec4 uMotionA;     // carousel (cx,cy,cz, trackRadius) | shuttle (bx,by,bz, amplitude)
-uniform vec4 uMotionB;     // (omega, restGamma, -, -)
+uniform vec4 uMotionB;     // (omega, restGamma, boundRadius, -)
 
 out vec3  vWorldPos;
 out vec3  vNormal;
@@ -1338,22 +1338,42 @@ void motionAt(float t, out vec3 p, out vec3 v, out vec3 n) {
 }
 #endif
 
-/* Solve  |p(t - a) - eye| = c * a  for the light-travel delay a. */
+/* Solve  g(a) = a - |p(t - a) - eye| / c = 0  for the light-travel delay.
+ *
+ * Newton on its own is not safe here. g'(a) = 1 + (v.n)/c, and the corners of a
+ * carousel car travel at 0.857c — faster than the track, because the car has
+ * width — so g' can fall to 0.14. One step then flings the iterate most of the
+ * way around the orbit, and since every vertex solves independently, neighbours
+ * land on completely different revolutions. That is what the dancing triangles
+ * were.
+ *
+ * So bracket it. Every point of a mover stays within uMotionB.z of its reference
+ * point, which traps the delay in [(d - bound)/c, (d + bound)/c]; and g is
+ * strictly increasing because |v| < c always. Bisection therefore cannot fail,
+ * and Newton is used only when it lands inside the bracket, to make it quick.
+ */
 float solveDelay() {
   vec3 p, v, n;
+#if MOTION == 0
   motionAt(uT, p, v, n);
-  float a = length(p - uObsPos) / uC;
-#if MOTION != 0
-  for (int i = 0; i < 6; ++i) {
+  return length(p - uObsPos) / uC;
+#else
+  float d  = length(uMotionA.xyz - uObsPos);
+  float lo = max(0.0, (d - uMotionB.z) / uC);
+  float hi = (d + uMotionB.z) / uC;
+  float a  = 0.5 * (lo + hi);
+  for (int i = 0; i < 24; ++i) {
     motionAt(uT - a, p, v, n);
     vec3 r = p - uObsPos;
     float rl = max(length(r), 1e-5);
-    float f  = a - rl / uC;
-    float fp = 1.0 + dot(v, r / rl) / uC;   // stays positive while |v| < c
-    a -= f / max(fp, 0.02);
+    float g = a - rl / uC;
+    if (g > 0.0) hi = a; else lo = a;
+    float gp = 1.0 + dot(v, r / rl) / uC;
+    float an = a - g / max(gp, 0.05);
+    a = (an > lo && an < hi) ? an : 0.5 * (lo + hi);
   }
-#endif
   return max(a, 0.0);
+#endif
 }
 
 void main() {
@@ -1721,8 +1741,8 @@ void main() {
     [-3.2, 46, 3.0], [-3.2, 84, 3.0], [-3.2, 132, 3.0]
   ];
 
-  const CAROUSEL = { cx: 30, cz: 6, radius: 6.0, cars: 8, beta: 0.74 };
-  const SHUTTLE = { bx: 0, by: 0, bz: -62, amp: 11, beta: 0.88 };
+  const CAROUSEL = { cx: 30, cz: 6, radius: 6.0, cars: 8, beta: 0.74, bound: 8.0 };
+  const SHUTTLE = { bx: 0, by: 0, bz: -62, amp: 11, beta: 0.88, bound: 20.0 };
 
   /* Carousel cars in car-local coordinates: +x along the track, +y up,
    * +z radially outward. The shader spins and contracts them. */
@@ -2187,13 +2207,13 @@ void main() {
     const carOmega = (K.beta * S.c) / K.radius;
     setCommon(R3.progCar, kin, bd);
     g.uniform4f(R3.progCar.u.uMotionA, K.cx, 0, K.cz, K.radius);
-    g.uniform4f(R3.progCar.u.uMotionB, carOmega, 1 / Math.sqrt(1 - K.beta * K.beta), 0, 0);
+    g.uniform4f(R3.progCar.u.uMotionB, carOmega, 1 / Math.sqrt(1 - K.beta * K.beta), K.bound, 0);
     drawMesh(R3.mCar);
 
     const T = SCENE.SHUTTLE;
     setCommon(R3.progShuttle, kin, bd);
     g.uniform4f(R3.progShuttle.u.uMotionA, T.bx, T.by, T.bz, T.amp);
-    g.uniform4f(R3.progShuttle.u.uMotionB, (T.beta * S.c) / T.amp, 1, 0, 0);
+    g.uniform4f(R3.progShuttle.u.uMotionB, (T.beta * S.c) / T.amp, 1, T.bound, 0);
     drawMesh(R3.mShuttle);
 
     return { fwd, bd };
@@ -2304,7 +2324,11 @@ void main() {
       el.addEventListener('input', upd);
       upd();
     };
-    slider('opt-c', 'opt-c-out', v => { S.c = v / 3.6; }, v => v.toFixed(1) + ' km/h');
+    slider('opt-c', 'opt-c-out', v => {
+      S.c = v / 3.6;
+      const m = document.getElementById('v-c');
+      if (m) m.textContent = 'c = ' + (Number.isInteger(v) ? v.toFixed(0) : v.toFixed(1)) + ' km/h';
+    }, v => v.toFixed(1) + ' km/h');
     slider('opt-exposure', 'opt-exposure-out', v => { S.exposure = v; }, v => v.toFixed(2));
     slider('opt-beam', 'opt-beam-out', v => { S.beamExp = v; }, v => 'D^' + v.toFixed(1));
     slider('opt-res', 'opt-res-out', v => { S.resScale = v; }, v => Math.round(v * 100) + '%');

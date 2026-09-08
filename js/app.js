@@ -377,13 +377,13 @@
     const carOmega = (K.beta * S.c) / K.radius;
     setCommon(R3.progCar, kin, bd);
     g.uniform4f(R3.progCar.u.uMotionA, K.cx, 0, K.cz, K.radius);
-    g.uniform4f(R3.progCar.u.uMotionB, carOmega, 1 / Math.sqrt(1 - K.beta * K.beta), 0, 0);
+    g.uniform4f(R3.progCar.u.uMotionB, carOmega, 1 / Math.sqrt(1 - K.beta * K.beta), K.bound, 0);
     drawMesh(R3.mCar);
 
     const T = SCENE.SHUTTLE;
     setCommon(R3.progShuttle, kin, bd);
     g.uniform4f(R3.progShuttle.u.uMotionA, T.bx, T.by, T.bz, T.amp);
-    g.uniform4f(R3.progShuttle.u.uMotionB, (T.beta * S.c) / T.amp, 1, 0, 0);
+    g.uniform4f(R3.progShuttle.u.uMotionB, (T.beta * S.c) / T.amp, 1, T.bound, 0);
     drawMesh(R3.mShuttle);
 
     return { fwd, bd };
@@ -494,7 +494,11 @@
       el.addEventListener('input', upd);
       upd();
     };
-    slider('opt-c', 'opt-c-out', v => { S.c = v / 3.6; }, v => v.toFixed(1) + ' km/h');
+    slider('opt-c', 'opt-c-out', v => {
+      S.c = v / 3.6;
+      const m = document.getElementById('v-c');
+      if (m) m.textContent = 'c = ' + (Number.isInteger(v) ? v.toFixed(0) : v.toFixed(1)) + ' km/h';
+    }, v => v.toFixed(1) + ' km/h');
     slider('opt-exposure', 'opt-exposure-out', v => { S.exposure = v; }, v => v.toFixed(2));
     slider('opt-beam', 'opt-beam-out', v => { S.beamExp = v; }, v => 'D^' + v.toFixed(1));
     slider('opt-res', 'opt-res-out', v => { S.resScale = v; }, v => Math.round(v * 100) + '%');
