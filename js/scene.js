@@ -27,7 +27,7 @@
   }
 
   const C = {
-    ground: rgb('#79828C'),
+    ground: rgb('#506062'),
     stone: rgb('#CFC7B4'),
     stoneDark: rgb('#9A9384'),
     basalt: rgb('#31363C'),
