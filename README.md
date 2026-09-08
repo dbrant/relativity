@@ -42,8 +42,19 @@ that whole chain is linear in the three primary weights, the effect at any `D`
 collapses to one 3×3 matrix, tabulated over log `D` and handed to the GPU. It is
 normalised so `D = 1` is exactly the identity: at rest, nothing is touched.
 
-Objects fade to black at extreme speed for an honest reason — the sun has no light
-left to give at the wavelengths you would need to be receiving.
+Redshift ends in black, honestly: the beaming factor is shrinking too, and there
+is nothing to see out in the radio.
+
+Blueshift is where the naive integral misleads. Run it straight and the view goes
+violet, then magenta, then black — the visible band is sampling ever deeper into
+the source's infrared, and there is little out there. True of the eye, and a poor
+picture of what is happening. At `D = 12` only **0.5%** of the arriving power is
+still visible; the source's own visible light is landing as X-rays and gamma, and
+anything looking at it is being flooded, not starved. So once the visible band
+stops carrying the energy, the response saturates to white instead of fading. The
+weight is the share of received power that has left the visible band, shaped by an
+exponent so that ordinary blueshift keeps its blue and only the extreme end washes
+out. That one is a choice, and it is the only one in the colour path.
 
 Brightness uses the bolometric `D⁴` beaming law. Because that clips to white at
 even a jog, there is an eye-adaptation model on by default: the log-average
