@@ -475,7 +475,14 @@ button {
   transition: opacity 0.18s, transform 0.18s;
 }
 
-#panel { top: 54px; right: var(--pad); width: 288px; transform: translateX(10px); }
+#panel {
+  top: 54px;
+  right: var(--pad);
+  width: 288px;
+  transform: translateX(10px);
+  max-height: calc(100vh - 54px - var(--pad));
+  overflow-y: auto;   /* Debug expanded runs long on a short viewport */
+}
 #help { top: 50%; left: 50%; width: min(560px, calc(100vw - 28px)); transform: translate(-50%, -46%); max-height: 84vh; overflow-y: auto; }
 
 #panel.is-open { opacity: 1; visibility: visible; transform: none; }
@@ -523,9 +530,49 @@ legend { padding: 0 0 8px; }
 
 .slider { display: grid; gap: 5px; padding: 7px 0; }
 .slider .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.slider .top label { font-size: 11.5px; color: var(--ink); }
 .slider output { font-size: 11px; color: var(--accent); }
 .slider input { width: 100%; accent-color: var(--accent); cursor: pointer; }
 .slider small { color: var(--accent); font-size: 10px; line-height: 1.4; min-height: 13px; }
+
+/* Debug: the knobs that describe the renderer rather than the physics. Folded
+   away by default so the panel reads as a set of choices about the world. */
+#debug {
+  border-top: 1px solid var(--edge);
+  padding-top: 12px;
+}
+
+#debug summary {
+  font-family: var(--label);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 1px 0;
+  transition: color 0.15s;
+}
+
+#debug summary::-webkit-details-marker { display: none; }
+
+#debug summary::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentColor;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  transition: transform 0.15s;
+}
+
+#debug[open] summary::before { transform: rotate(90deg); }
+#debug summary:hover { color: var(--ink); }
+#debug .debug-body { padding-top: 4px; }
 
 #panel footer {
   margin-top: 14px;
@@ -670,7 +717,7 @@ legend { padding: 0 0 8px; }
   </div>
 </div>
 
-<aside id="panel" aria-label="Settings">
+<aside id="panel" class="is-open" aria-label="Settings">
   <div class="drawer-head">
     <h2>Settings</h2>
     <button type="button" id="panel-close" aria-label="Close settings">&times;</button>
@@ -701,41 +748,46 @@ legend { padding: 0 0 8px; }
   </fieldset>
 
   <fieldset>
-    <legend class=eyebrow>World</legend>
-    <label class=check>
-      <input type=checkbox id=opt-eye checked>
+    <legend class="eyebrow">World</legend>
+    <label class="check">
+      <input type="checkbox" id="opt-eye" checked>
       <span>Eye adaptation
         <small>Your retina adjusts to the average brightness ahead, so beaming reads as a gradient across the view instead of a white-out.</small></span>
     </label>
-    <div class=slider>
-      <div class=top><label for=opt-c>Speed of light</label><output id="opt-c-out">5.0 km/h</output></div>
+    <div class="slider">
+      <div class="top"><label for="opt-c">Speed of light</label><output id="opt-c-out">5.0 km/h</output></div>
       <input type="range" id="opt-c" min="1" max="40" step="0.5" value="5">
     </div>
     <div class="slider">
       <div class="top"><label for="opt-beam">Beaming exponent</label><output id="opt-beam-out">D^4.0</output></div>
       <input type="range" id="opt-beam" min="0" max="4" step="0.1" value="4">
     </div>
-    <div class="slider">
-      <div class="top"><label for="opt-exposure">Exposure</label><output id="opt-exposure-out">1.00</output></div>
-      <input type="range" id="opt-exposure" min="0.2" max="2.5" step="0.05" value="1">
-    </div>
-    <div class="slider">
-      <div class="top"><label for="opt-res">Render scale</label><output id="opt-res-out">100%</output></div>
-      <input type="range" id="opt-res" min="0.4" max="1" step="0.05" value="1">
-    </div>
-    <div class="slider">
-      <div class="top"><label for="opt-ground">Ground detail</label><output id="opt-ground-out">High</output></div>
-      <input type="range" id="opt-ground" min="0" max="4" step="1" value="2">
-      <small id="opt-ground-now"></small>
-    </div>
-    <label class="check">
-      <input type="checkbox" id="opt-ground-adapt" checked>
-      <span>Adapt to speed
-        <small>Aberration magnifies the view astern by &gamma;(1+&beta;), so the ground is retessellated finer as you approach c. The slider above becomes a floor.</small></span>
-    </label>
   </fieldset>
 
-  <footer><span><span id="v-fps">&mdash;</span> fps</span><span><span id="v-verts">&mdash;</span> vertices</span></footer>
+  <details id="debug">
+    <summary>Debug</summary>
+    <div class="debug-body">
+      <div class="slider">
+        <div class="top"><label for="opt-exposure">Exposure</label><output id="opt-exposure-out">1.00</output></div>
+        <input type="range" id="opt-exposure" min="0.2" max="2.5" step="0.05" value="1">
+      </div>
+      <div class="slider">
+        <div class="top"><label for="opt-res">Render scale</label><output id="opt-res-out">100%</output></div>
+        <input type="range" id="opt-res" min="0.4" max="1" step="0.05" value="1">
+      </div>
+      <div class="slider">
+        <div class="top"><label for="opt-ground">Ground detail</label><output id="opt-ground-out">High</output></div>
+        <input type="range" id="opt-ground" min="0" max="4" step="1" value="2">
+        <small id="opt-ground-now"></small>
+      </div>
+      <label class="check">
+        <input type="checkbox" id="opt-ground-adapt" checked>
+        <span>Adapt to speed
+          <small>Aberration magnifies the view astern by &gamma;(1+&beta;), so the ground is retessellated finer as you approach c. The slider above becomes a floor.</small></span>
+      </label>
+      <footer><span><span id="v-fps">&mdash;</span> fps</span><span><span id="v-verts">&mdash;</span> vertices</span></footer>
+    </div>
+  </details>
 </aside>
 
 <aside id="help" aria-label="Field guide">

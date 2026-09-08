@@ -86,7 +86,7 @@
   </div>
 </div>
 
-<aside id="panel" aria-label="Settings">
+<aside id="panel" class="is-open" aria-label="Settings">
   <div class="drawer-head">
     <h2>Settings</h2>
     <button type="button" id="panel-close" aria-label="Close settings">&times;</button>
@@ -117,41 +117,46 @@
   </fieldset>
 
   <fieldset>
-    <legend class=eyebrow>World</legend>
-    <label class=check>
-      <input type=checkbox id=opt-eye checked>
+    <legend class="eyebrow">World</legend>
+    <label class="check">
+      <input type="checkbox" id="opt-eye" checked>
       <span>Eye adaptation
         <small>Your retina adjusts to the average brightness ahead, so beaming reads as a gradient across the view instead of a white-out.</small></span>
     </label>
-    <div class=slider>
-      <div class=top><label for=opt-c>Speed of light</label><output id="opt-c-out">5.0 km/h</output></div>
+    <div class="slider">
+      <div class="top"><label for="opt-c">Speed of light</label><output id="opt-c-out">5.0 km/h</output></div>
       <input type="range" id="opt-c" min="1" max="40" step="0.5" value="5">
     </div>
     <div class="slider">
       <div class="top"><label for="opt-beam">Beaming exponent</label><output id="opt-beam-out">D^4.0</output></div>
       <input type="range" id="opt-beam" min="0" max="4" step="0.1" value="4">
     </div>
-    <div class="slider">
-      <div class="top"><label for="opt-exposure">Exposure</label><output id="opt-exposure-out">1.00</output></div>
-      <input type="range" id="opt-exposure" min="0.2" max="2.5" step="0.05" value="1">
-    </div>
-    <div class="slider">
-      <div class="top"><label for="opt-res">Render scale</label><output id="opt-res-out">100%</output></div>
-      <input type="range" id="opt-res" min="0.4" max="1" step="0.05" value="1">
-    </div>
-    <div class="slider">
-      <div class="top"><label for="opt-ground">Ground detail</label><output id="opt-ground-out">High</output></div>
-      <input type="range" id="opt-ground" min="0" max="4" step="1" value="2">
-      <small id="opt-ground-now"></small>
-    </div>
-    <label class="check">
-      <input type="checkbox" id="opt-ground-adapt" checked>
-      <span>Adapt to speed
-        <small>Aberration magnifies the view astern by &gamma;(1+&beta;), so the ground is retessellated finer as you approach c. The slider above becomes a floor.</small></span>
-    </label>
   </fieldset>
 
-  <footer><span><span id="v-fps">&mdash;</span> fps</span><span><span id="v-verts">&mdash;</span> vertices</span></footer>
+  <details id="debug">
+    <summary>Debug</summary>
+    <div class="debug-body">
+      <div class="slider">
+        <div class="top"><label for="opt-exposure">Exposure</label><output id="opt-exposure-out">1.00</output></div>
+        <input type="range" id="opt-exposure" min="0.2" max="2.5" step="0.05" value="1">
+      </div>
+      <div class="slider">
+        <div class="top"><label for="opt-res">Render scale</label><output id="opt-res-out">100%</output></div>
+        <input type="range" id="opt-res" min="0.4" max="1" step="0.05" value="1">
+      </div>
+      <div class="slider">
+        <div class="top"><label for="opt-ground">Ground detail</label><output id="opt-ground-out">High</output></div>
+        <input type="range" id="opt-ground" min="0" max="4" step="1" value="2">
+        <small id="opt-ground-now"></small>
+      </div>
+      <label class="check">
+        <input type="checkbox" id="opt-ground-adapt" checked>
+        <span>Adapt to speed
+          <small>Aberration magnifies the view astern by &gamma;(1+&beta;), so the ground is retessellated finer as you approach c. The slider above becomes a floor.</small></span>
+      </label>
+      <footer><span><span id="v-fps">&mdash;</span> fps</span><span><span id="v-verts">&mdash;</span> vertices</span></footer>
+    </div>
+  </details>
 </aside>
 
 <aside id="help" aria-label="Field guide">

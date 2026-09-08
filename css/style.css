@@ -464,7 +464,14 @@ button {
   transition: opacity 0.18s, transform 0.18s;
 }
 
-#panel { top: 54px; right: var(--pad); width: 288px; transform: translateX(10px); }
+#panel {
+  top: 54px;
+  right: var(--pad);
+  width: 288px;
+  transform: translateX(10px);
+  max-height: calc(100vh - 54px - var(--pad));
+  overflow-y: auto;   /* Debug expanded runs long on a short viewport */
+}
 #help { top: 50%; left: 50%; width: min(560px, calc(100vw - 28px)); transform: translate(-50%, -46%); max-height: 84vh; overflow-y: auto; }
 
 #panel.is-open { opacity: 1; visibility: visible; transform: none; }
@@ -512,9 +519,49 @@ legend { padding: 0 0 8px; }
 
 .slider { display: grid; gap: 5px; padding: 7px 0; }
 .slider .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.slider .top label { font-size: 11.5px; color: var(--ink); }
 .slider output { font-size: 11px; color: var(--accent); }
 .slider input { width: 100%; accent-color: var(--accent); cursor: pointer; }
 .slider small { color: var(--accent); font-size: 10px; line-height: 1.4; min-height: 13px; }
+
+/* Debug: the knobs that describe the renderer rather than the physics. Folded
+   away by default so the panel reads as a set of choices about the world. */
+#debug {
+  border-top: 1px solid var(--edge);
+  padding-top: 12px;
+}
+
+#debug summary {
+  font-family: var(--label);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 1px 0;
+  transition: color 0.15s;
+}
+
+#debug summary::-webkit-details-marker { display: none; }
+
+#debug summary::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentColor;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  transition: transform 0.15s;
+}
+
+#debug[open] summary::before { transform: rotate(90deg); }
+#debug summary:hover { color: var(--ink); }
+#debug .debug-body { padding-top: 4px; }
 
 #panel footer {
   margin-top: 14px;
