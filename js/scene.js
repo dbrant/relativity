@@ -42,8 +42,9 @@
   };
   const CUBES = ['#C05F3C', '#D2A03C', '#7C9068', '#3E7C82', '#6B4A6E', '#D9D3C4', '#8C5A4A'].map(rgb);
 
-  const MATTE = [0, 0], GROUND = [1, 0], POLISH = [3, 0];
-  const beaconMat = phase => [2, phase];
+  // [kind, motionPhase, blinkPhase]
+  const MATTE = [0, 0, 0], GROUND = [1, 0, 0], POLISH = [3, 0, 0];
+  const beaconMat = blink => [2, 0, blink];
 
   /* Deterministic scatter so the layout is the same every time you load it. */
   function rng(seed) {
@@ -155,10 +156,10 @@
     for (let i = 0; i < CAROUSEL.cars; i++) {
       const ph = (i / CAROUSEL.cars) * Math.PI * 2;
       const body = CUBES[i % CUBES.length];
-      geo.box(m, 0, 1.15, 0, 3.2, 1.5, 1.5, body, [0, ph]);
-      geo.box(m, 0, 2.05, 0, 2.4, 0.35, 1.3, C.stone, [3, ph]);
-      geo.box(m, 0, 0.28, 0, 3.4, 0.24, 1.7, C.basalt, [0, ph]);
-      geo.sphere(m, 1.3, 2.42, 0, 0.20, C.beacon, [2, ph], 14, 10);
+      geo.box(m, 0, 1.15, 0, 3.2, 1.5, 1.5, body, [0, ph, 0]);
+      geo.box(m, 0, 2.05, 0, 2.4, 0.35, 1.3, C.stone, [3, ph, 0]);
+      geo.box(m, 0, 0.28, 0, 3.4, 0.24, 1.7, C.basalt, [0, ph, 0]);
+      geo.sphere(m, 1.3, 2.42, 0, 0.20, C.beacon, [2, ph, ph], 14, 10);
     }
     return m;
   }
@@ -166,12 +167,13 @@
   /* The shuttle in its own rest frame: 14 m of clearly-marked length. */
   function buildShuttle() {
     const m = new geo.Mesh();
-    geo.box(m, 0, 1.9, 0, 14, 2.6, 2.4, C.shuttle, [0, 0],
+    geo.box(m, 0, 1.9, 0, 14, 2.6, 2.4, C.shuttle, [0, 0, 0],
       (x) => (Math.floor((x + 7) / 1.75) & 1) ? C.shuttle : C.shuttleTrim);
-    geo.box(m, 0, 3.32, 0, 13.2, 0.28, 2.6, C.shuttleTrim, [3, 0]);
-    geo.box(m, 0, 0.5, 0, 13.6, 0.5, 2.0, C.basalt, [0, 0]);
-    geo.sphere(m, 7.0, 3.6, 0, 0.26, C.beacon, [2, 0], 16, 12);
-    geo.sphere(m, -7.0, 3.6, 0, 0.26, C.beacon, [2, 0.5], 16, 12);
+    geo.box(m, 0, 3.32, 0, 13.2, 0.28, 2.6, C.shuttleTrim, [3, 0, 0]);
+    geo.box(m, 0, 0.5, 0, 13.6, 0.5, 2.0, C.basalt, [0, 0, 0]);
+    // Both lamps ride the shuttle: motion phase 0, alternating blink phases.
+    geo.sphere(m, 6.5, 3.62, 0, 0.26, C.beacon, [2, 0, 0.0], 16, 12);
+    geo.sphere(m, -6.5, 3.62, 0, 0.26, C.beacon, [2, 0, 0.5], 16, 12);
     return m;
   }
 

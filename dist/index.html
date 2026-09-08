@@ -914,8 +914,8 @@ The <b>carousel</b> cars are contracted by their own motion, and you see each
   }
 
   // Interleaved layout shared by every mesh in the sim.
-  // pos(3) normal(3) color(3) mat(2)  =  11 floats
-  const STRIDE = 11;
+  // pos(3) normal(3) color(3) mat(3)  =  12 floats
+  const STRIDE = 12;
 
   function uploadMesh(gl, prog, mesh) {
     const vao = gl.createVertexArray();
@@ -935,7 +935,7 @@ The <b>carousel</b> cars are contracted by their own motion, and you see each
     bind('aPos', 3, 0);
     bind('aNormal', 3, 3);
     bind('aColor', 3, 6);
-    bind('aMat', 2, 9);
+    bind('aMat', 3, 9);
 
     const ibo = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
@@ -1210,12 +1210,17 @@ The <b>carousel</b> cars are contracted by their own motion, and you see each
 (function (R) {
   'use strict';
 
-  const STRIDE = 11; // pos3 normal3 color3 mat2
+  const STRIDE = 12; // pos3 normal3 color3 mat3
 
   function Mesh() { this.verts = []; this.tris = []; }
 
+  /* mat is [kind, motionPhase, blinkPhase]; the last two default to zero so
+   * ordinary scenery can keep passing a pair. Keeping motion and blink apart
+   * matters: sharing one slot once put a lamp on a different oscillation phase
+   * from the vehicle carrying it, and it drifted off into the air. */
   Mesh.prototype.push = function (p, n, c, m) {
-    this.verts.push(p[0], p[1], p[2], n[0], n[1], n[2], c[0], c[1], c[2], m[0], m[1]);
+    this.verts.push(p[0], p[1], p[2], n[0], n[1], n[2], c[0], c[1], c[2],
+                    m[0], m[1] || 0, m[2] || 0);
     return this.verts.length / STRIDE - 1;
   };
   Mesh.prototype.quad = function (a, b, c, d) {
@@ -1398,7 +1403,7 @@ precision highp float;
 in vec3 aPos;      // rest-frame position (world position for static geometry)
 in vec3 aNormal;
 in vec3 aColor;
-in vec2 aMat;      // x = material kind, y = phase parameter
+in vec3 aMat;      // x = material kind, y = motion phase, z = blink phase
 
 uniform mat4  uProj;
 uniform mat3  uViewRot;
@@ -1419,7 +1424,7 @@ uniform vec4 uMotionB;     // (omega, restGamma, boundRadius, -)
 out vec3  vWorldPos;
 out vec3  vNormal;
 out vec3  vColor;
-out vec2  vMat;
+out vec3  vMat;
 out vec3  vViewDir;
 out float vD;
 out float vTEmit;
@@ -1550,7 +1555,7 @@ precision highp sampler2D;
 in vec3  vWorldPos;
 in vec3  vNormal;
 in vec3  vColor;
-in vec2  vMat;
+in vec3  vMat;
 in vec3  vViewDir;
 in float vD;
 in float vTEmit;
@@ -1669,7 +1674,7 @@ void main() {
   // evaluated at the EMISSION time, their apparent rate is Doppler shifted for
   // free — walk toward one and watch it speed up.
   if (beacon) {
-    float ph = vTEmit * uBeaconRate + vMat.y;
+    float ph = vTEmit * uBeaconRate + vMat.z;
     float pulse = pow(0.5 + 0.5 * sin(6.28318530718 * ph), 14.0);
     radiance += vColor * (0.015 + 34.0 * pulse);
   }
@@ -1759,8 +1764,9 @@ void main() {
   };
   const CUBES = ['#C05F3C', '#D2A03C', '#7C9068', '#3E7C82', '#6B4A6E', '#D9D3C4', '#8C5A4A'].map(rgb);
 
-  const MATTE = [0, 0], GROUND = [1, 0], POLISH = [3, 0];
-  const beaconMat = phase => [2, phase];
+  // [kind, motionPhase, blinkPhase]
+  const MATTE = [0, 0, 0], GROUND = [1, 0, 0], POLISH = [3, 0, 0];
+  const beaconMat = blink => [2, 0, blink];
 
   /* Deterministic scatter so the layout is the same every time you load it. */
   function rng(seed) {
@@ -1872,10 +1878,10 @@ void main() {
     for (let i = 0; i < CAROUSEL.cars; i++) {
       const ph = (i / CAROUSEL.cars) * Math.PI * 2;
       const body = CUBES[i % CUBES.length];
-      geo.box(m, 0, 1.15, 0, 3.2, 1.5, 1.5, body, [0, ph]);
-      geo.box(m, 0, 2.05, 0, 2.4, 0.35, 1.3, C.stone, [3, ph]);
-      geo.box(m, 0, 0.28, 0, 3.4, 0.24, 1.7, C.basalt, [0, ph]);
-      geo.sphere(m, 1.3, 2.42, 0, 0.20, C.beacon, [2, ph], 14, 10);
+      geo.box(m, 0, 1.15, 0, 3.2, 1.5, 1.5, body, [0, ph, 0]);
+      geo.box(m, 0, 2.05, 0, 2.4, 0.35, 1.3, C.stone, [3, ph, 0]);
+      geo.box(m, 0, 0.28, 0, 3.4, 0.24, 1.7, C.basalt, [0, ph, 0]);
+      geo.sphere(m, 1.3, 2.42, 0, 0.20, C.beacon, [2, ph, ph], 14, 10);
     }
     return m;
   }
@@ -1883,12 +1889,13 @@ void main() {
   /* The shuttle in its own rest frame: 14 m of clearly-marked length. */
   function buildShuttle() {
     const m = new geo.Mesh();
-    geo.box(m, 0, 1.9, 0, 14, 2.6, 2.4, C.shuttle, [0, 0],
+    geo.box(m, 0, 1.9, 0, 14, 2.6, 2.4, C.shuttle, [0, 0, 0],
       (x) => (Math.floor((x + 7) / 1.75) & 1) ? C.shuttle : C.shuttleTrim);
-    geo.box(m, 0, 3.32, 0, 13.2, 0.28, 2.6, C.shuttleTrim, [3, 0]);
-    geo.box(m, 0, 0.5, 0, 13.6, 0.5, 2.0, C.basalt, [0, 0]);
-    geo.sphere(m, 7.0, 3.6, 0, 0.26, C.beacon, [2, 0], 16, 12);
-    geo.sphere(m, -7.0, 3.6, 0, 0.26, C.beacon, [2, 0.5], 16, 12);
+    geo.box(m, 0, 3.32, 0, 13.2, 0.28, 2.6, C.shuttleTrim, [3, 0, 0]);
+    geo.box(m, 0, 0.5, 0, 13.6, 0.5, 2.0, C.basalt, [0, 0, 0]);
+    // Both lamps ride the shuttle: motion phase 0, alternating blink phases.
+    geo.sphere(m, 6.5, 3.62, 0, 0.26, C.beacon, [2, 0, 0.0], 16, 12);
+    geo.sphere(m, -6.5, 3.62, 0, 0.26, C.beacon, [2, 0, 0.5], 16, 12);
     return m;
   }
 

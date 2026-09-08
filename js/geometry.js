@@ -7,12 +7,17 @@
 (function (R) {
   'use strict';
 
-  const STRIDE = 11; // pos3 normal3 color3 mat2
+  const STRIDE = 12; // pos3 normal3 color3 mat3
 
   function Mesh() { this.verts = []; this.tris = []; }
 
+  /* mat is [kind, motionPhase, blinkPhase]; the last two default to zero so
+   * ordinary scenery can keep passing a pair. Keeping motion and blink apart
+   * matters: sharing one slot once put a lamp on a different oscillation phase
+   * from the vehicle carrying it, and it drifted off into the air. */
   Mesh.prototype.push = function (p, n, c, m) {
-    this.verts.push(p[0], p[1], p[2], n[0], n[1], n[2], c[0], c[1], c[2], m[0], m[1]);
+    this.verts.push(p[0], p[1], p[2], n[0], n[1], n[2], c[0], c[1], c[2],
+                    m[0], m[1] || 0, m[2] || 0);
     return this.verts.length / STRIDE - 1;
   };
   Mesh.prototype.quad = function (a, b, c, d) {

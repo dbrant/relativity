@@ -24,7 +24,7 @@ precision highp float;
 in vec3 aPos;      // rest-frame position (world position for static geometry)
 in vec3 aNormal;
 in vec3 aColor;
-in vec2 aMat;      // x = material kind, y = phase parameter
+in vec3 aMat;      // x = material kind, y = motion phase, z = blink phase
 
 uniform mat4  uProj;
 uniform mat3  uViewRot;
@@ -45,7 +45,7 @@ uniform vec4 uMotionB;     // (omega, restGamma, boundRadius, -)
 out vec3  vWorldPos;
 out vec3  vNormal;
 out vec3  vColor;
-out vec2  vMat;
+out vec3  vMat;
 out vec3  vViewDir;
 out float vD;
 out float vTEmit;
@@ -176,7 +176,7 @@ precision highp sampler2D;
 in vec3  vWorldPos;
 in vec3  vNormal;
 in vec3  vColor;
-in vec2  vMat;
+in vec3  vMat;
 in vec3  vViewDir;
 in float vD;
 in float vTEmit;
@@ -295,7 +295,7 @@ void main() {
   // evaluated at the EMISSION time, their apparent rate is Doppler shifted for
   // free — walk toward one and watch it speed up.
   if (beacon) {
-    float ph = vTEmit * uBeaconRate + vMat.y;
+    float ph = vTEmit * uBeaconRate + vMat.z;
     float pulse = pow(0.5 + 0.5 * sin(6.28318530718 * ph), 14.0);
     radiance += vColor * (0.015 + 34.0 * pulse);
   }
