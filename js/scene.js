@@ -73,16 +73,16 @@
    * something you can literally count off. */
   function stave(mesh, cx, cy, cz, length, axis) {
     geo.setDetail(SLENDER_DETAIL);
-    const sx = axis === 'z' ? 0.9 : length;
-    const sz = axis === 'z' ? length : 0.9;
-    geo.box(mesh, cx, cy, cz, sx, 0.9, sz, C.staveA, axis === 'z' ? BAND_Z : BAND_X);
+    const sx = axis === 'z' ? 0.5 : length;
+    const sz = axis === 'z' ? length : 0.5;
+    geo.box(mesh, cx, cy, cz, sx, 0.5, sz, C.staveA, axis === 'z' ? BAND_Z : BAND_X);
     // Posts holding it up.
     const n = Math.max(2, Math.round(length / 12));
     for (let i = 0; i <= n; i++) {
       const d = -length / 2 + (length * i) / n;
       const px = axis === 'z' ? cx : cx + d;
       const pz = axis === 'z' ? cz + d : cz;
-      geo.cylinder(mesh, px, 0, pz, 0.13, cy - 0.45, C.rail, MATTE, 18);
+      geo.cylinder(mesh, px, 0, pz, 0.10, cy - 0.25, C.rail, MATTE, 18);
     }
     geo.setDetail(1);
   }
@@ -112,8 +112,8 @@
     }
 
     // The matched pair of staves. Identical, one along each axis.
-    stave(m, -22, 2.3, 0, 60, 'z');
-    stave(m, 0, 2.3, -46, 60, 'x');
+    stave(m, -22, 1.0, 0, 60, 'z');
+    stave(m, 0, 1.0, -46, 60, 'x');
 
     // Obelisk, banded horizontally, closing the corridor.
     geo.box(m, 0, 0, -96, 3.4, 34, 3.4, C.basalt, MATTE,
