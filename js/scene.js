@@ -204,31 +204,39 @@
       'Lower SHUTTLE.beta or SHUTTLE.halfLen, or raise SHUTTLE.amp.');
   }
 
+  /* Movers are cut finer than anything static, by roughly their own stretch
+   * factor 1/(1 - beta), so their retarded images stay smooth. */
+  const MOVER_DETAIL = 4;
+
   /* Carousel cars in car-local coordinates: +x along the track, +y up,
    * +z radially outward. The shader spins and contracts them. */
   function buildCarousel() {
     const m = new geo.Mesh();
+    geo.setDetail(MOVER_DETAIL);
     for (let i = 0; i < CAROUSEL.cars; i++) {
       const ph = (i / CAROUSEL.cars) * Math.PI * 2;
       const body = CUBES[i % CUBES.length];
       geo.box(m, 0, 1.15, 0, 3.2, 1.5, 1.5, body, [0, ph, 0]);
       geo.box(m, 0, 2.05, 0, 2.4, 0.35, 1.3, C.stone, [3, ph, 0]);
       geo.box(m, 0, 0.28, 0, 3.4, 0.24, 1.7, C.basalt, [0, ph, 0]);
-      geo.sphere(m, 1.3, 2.42, 0, 0.20, C.beacon, [2, ph, ph], 14, 10);
+      geo.sphere(m, 1.3, 2.42, 0, 0.20, C.beacon, [2, ph, ph], 28, 20);
     }
+    geo.setDetail(1);
     return m;
   }
 
   /* The shuttle in its own rest frame: 14 m of clearly-marked length. */
   function buildShuttle() {
     const m = new geo.Mesh();
+    geo.setDetail(MOVER_DETAIL);
     // Livery panel rather than stripes: kind 9 samples the decal texture.
     geo.box(m, 0, 1.9, 0, 14, 2.6, 2.4, C.shuttle, [9, 0, 0], null, TEXTURE_ASPECT);
     geo.box(m, 0, 3.32, 0, 13.2, 0.28, 2.6, C.shuttleTrim, [3, 0, 0]);
     geo.box(m, 0, 0.5, 0, 13.6, 0.5, 2.0, C.basalt, [0, 0, 0]);
     // Both lamps ride the shuttle: motion phase 0, alternating blink phases.
-    geo.sphere(m, 6.5, 3.62, 0, 0.26, C.beacon, [2, 0, 0.0], 16, 12);
-    geo.sphere(m, -6.5, 3.62, 0, 0.26, C.beacon, [2, 0, 0.5], 16, 12);
+    geo.sphere(m, 6.5, 3.62, 0, 0.26, C.beacon, [2, 0, 0.0], 32, 24);
+    geo.sphere(m, -6.5, 3.62, 0, 0.26, C.beacon, [2, 0, 0.5], 32, 24);
+    geo.setDetail(1);
     return m;
   }
 

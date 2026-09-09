@@ -75,7 +75,20 @@
     }
   }
 
-  const seg = (len, target) => Math.max(1, Math.min(72, Math.round(len / (target || 0.55))));
+  /* Tessellation density, as a multiplier on the default target edge length.
+   *
+   * The movers need far more of it than static scenery. The light cone stretches
+   * a moving object's image along its motion by up to 1/(1 - beta): at 0.78 that
+   * is 4.55x, so a 0.55 m edge gets drawn up to 2.5 m long. The stretch is real
+   * — parts of a moving body genuinely are seen at different moments — but a mesh
+   * cut for its rest size cannot draw it, and the long thin triangles read as
+   * spikes tearing out of the hull. Same principle as the ground: the transform
+   * is applied per vertex, so the mesh has to be fine enough to follow the curve
+   * it bends into. */
+  let detail = 1;
+  function setDetail(k) { detail = k; }
+  const seg = (len, target) =>
+    Math.max(1, Math.min(220, Math.round((len * detail) / (target || 0.55))));
 
   /* Axis-aligned box, centre (cx,cy,cz), full extents (sx,sy,sz).
    * tint(x,y,z) may return a per-vertex colour (used for striped rods). */
@@ -215,5 +228,6 @@
     });
   }
 
-  R.geo = { Mesh, patch, box, cylinder, sphere, torusXY, groundDisc, skyDome, mountainRing, seg, STRIDE };
+  R.geo = { Mesh, patch, box, cylinder, sphere, torusXY, groundDisc, skyDome, mountainRing,
+            seg, setDetail, STRIDE };
 })(window.Rel = window.Rel || {});

@@ -52,6 +52,7 @@ out vec3  vViewDir;
 out float vD;
 out float vTEmit;
 out float vDist;
+out float vLogZ;
 
 /* Where this vertex is, and how fast it is going, at world time t. */
 #if MOTION == 0
@@ -177,8 +178,20 @@ void main() {
   vDist     = rl;
 
   gl_Position = uProj * vec4(uViewRot * rObs, 1.0);
-  // Logarithmic depth: the apparent scene spans metres to tens of kilometres.
-  gl_Position.z = (log2(max(1e-6, 1.0 + gl_Position.w)) * uLogDepthC - 1.0) * gl_Position.w;
+
+  /* Logarithmic depth, because the apparent scene spans metres to tens of
+   * kilometres. Written here for clipping, but RESOLVED PER FRAGMENT: log2 is
+   * strongly curved, and interpolating it from the corners is only right while
+   * triangles are shallow. The retarded image of a fast mover seen close up has
+   * triangles spanning metres of depth, where the interpolation error reaches
+   * 7e-3 in NDC — about a hundred thousand times what a 24-bit buffer resolves —
+   * and near and far surfaces of the same object get ordered wrongly. That is
+   * what let wedges of the far side punch out through the near flank.
+   *
+   * w is linear in eye space, so a perspective-correct varying recovers it
+   * exactly at each fragment. */
+  vLogZ = 1.0 + gl_Position.w;
+  gl_Position.z = (log2(max(1e-6, vLogZ)) * uLogDepthC - 1.0) * gl_Position.w;
 }
 `;
 
@@ -196,6 +209,7 @@ in vec3  vViewDir;
 in float vD;
 in float vTEmit;
 in float vDist;
+in float vLogZ;
 
 uniform vec3  uObsPos;
 uniform vec3  uSunDir;
@@ -215,6 +229,7 @@ uniform float uBeamOn;
 uniform float uBeamExp;
 uniform float uExposure;
 uniform float uBeaconRate;
+uniform float uLogDepthC;
 uniform vec3  uBandColor;
 uniform float uBandWidth;
 uniform sampler2D uTex;
@@ -365,6 +380,7 @@ void main() {
   float fog = 1.0 - exp(-vDist * uFogDensity);
   radiance = mix(radiance, uHaze * 1.05, fog * fogWeight);
 
+  gl_FragDepth = log2(vLogZ) * uLogDepthC * 0.5;
   fragColor = present(radiance);
 }
 `;
