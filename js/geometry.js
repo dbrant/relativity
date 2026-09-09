@@ -94,8 +94,13 @@
    * tint(x,y,z) may return a per-vertex colour (used for striped rods). */
   /* uvAspect, when given, lays the texture on each face as a centred decal of
    * that width:height ratio, scaled to fit. Stretching one image across faces of
-   * different proportions distorts it differently on each; fitting does not. */
-  function box(mesh, cx, cy, cz, sx, sy, sz, color, mat, tint, uvAspect) {
+   * different proportions distorts it differently on each; fitting does not.
+   *
+   * uvAxis restricts the decal to the faces whose normal runs along that axis
+   * ('x', 'y' or 'z'). The rest get UVs outside the unit square, which the
+   * shader already reads as "no decal here" — so this needs no shader support. */
+  function box(mesh, cx, cy, cz, sx, sy, sz, color, mat, tint, uvAspect, uvAxis) {
+    const AXIS = { x: 0, y: 1, z: 2 };
     const hx = sx / 2, hy = sy / 2, hz = sz / 2;
     const ni = seg(sx), nj = seg(sy), nk = seg(sz);
     const faces = [
@@ -111,11 +116,15 @@
       const vh = [va[0] * hx, va[1] * hy, va[2] * hz];
       let uvx = null;
       if (uvAspect) {
-        const fw = 2 * (ua[0] * hx + ua[1] * hy + ua[2] * hz);
-        const fh = 2 * (va[0] * hx + va[1] * hy + va[2] * hz);
-        const dh = Math.min(fh, fw / uvAspect);
-        const su = fw / (dh * uvAspect), sv = fh / dh;
-        uvx = [su, sv, (1 - su) / 2, (1 - sv) / 2];
+        if (uvAxis !== undefined && Math.abs(n[AXIS[uvAxis]]) < 0.5) {
+          uvx = [1, 1, 5, 5];   // parked outside [0,1]: this face carries none
+        } else {
+          const fw = 2 * (ua[0] * hx + ua[1] * hy + ua[2] * hz);
+          const fh = 2 * (va[0] * hx + va[1] * hy + va[2] * hz);
+          const dh = Math.min(fh, fw / uvAspect);
+          const su = fw / (dh * uvAspect), sv = fh / dh;
+          uvx = [su, sv, (1 - su) / 2, (1 - sv) / 2];
+        }
       }
       patch(mesh, nu, nv, color, mat, (u, v) => {
         const s = (u - 0.5) * 2, t = (v - 0.5) * 2;

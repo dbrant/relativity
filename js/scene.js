@@ -229,8 +229,13 @@
   function buildShuttle() {
     const m = new geo.Mesh();
     geo.setDetail(MOVER_DETAIL);
-    // Livery panel rather than stripes: kind 9 samples the decal texture.
-    geo.box(m, 0, 1.9, 0, 14, 2.6, 2.4, C.shuttle, [9, 0, 0], null, TEXTURE_ASPECT);
+    /* Livery panel rather than stripes: kind 9 samples the decal texture, and
+     * only the long sides carry it. The end caps are 2.4 m deep along a typical
+     * line of sight, so light takes long enough to cross them that the shuttle
+     * can pass you meanwhile and the face turns away partway across itself. The
+     * boundary that leaves is real, but a photograph draped over it advertises
+     * the seam; plain colour wears it far better. */
+    geo.box(m, 0, 1.9, 0, 14, 2.6, 2.4, C.shuttle, [9, 0, 0], null, TEXTURE_ASPECT, 'z');
     geo.box(m, 0, 3.32, 0, 13.2, 0.28, 2.6, C.shuttleTrim, [3, 0, 0]);
     geo.box(m, 0, 0.5, 0, 13.6, 0.5, 2.0, C.basalt, [0, 0, 0]);
     // Both lamps ride the shuttle: motion phase 0, alternating blink phases.
