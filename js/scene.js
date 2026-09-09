@@ -233,7 +233,7 @@
       geo.box(m, 0, 1.15, 0, 3.2, 1.5, 1.5, body, [0, ph, 0]);
       geo.box(m, 0, 2.05, 0, 2.4, 0.35, 1.3, C.stone, [3, ph, 0]);
       geo.box(m, 0, 0.28, 0, 3.4, 0.24, 1.7, C.basalt, [0, ph, 0]);
-      geo.sphere(m, 1.3, 2.42, 0, 0.20, C.beacon, [2, ph, ph], 28, 20);
+      geo.sphere(m, 1.3, 2.32, 0, 0.20, C.beacon, [2, ph, ph], 28, 20);
     }
     geo.setDetail(1);
     return m;
@@ -312,6 +312,6 @@
     BAND_COLOR: C.staveB, BAND_WIDTH, TEXTURE_FILE,
     adaptiveGroundLevel,
     CAROUSEL, SHUTTLE, BEACONS,
-    start: { x: 0, y: 1.7, z: 46, yaw: 0, pitch: -0.02 }
+    start: { x: 0, y: 2.0, z: 46, yaw: 0, pitch: -0.02 }
   };
 })(window.Rel = window.Rel || {});
