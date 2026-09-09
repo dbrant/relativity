@@ -174,8 +174,8 @@
       color: rgb('#9C7A46'), mat: [3, 0, 0] }
   ];
 
-  const CAROUSEL = { cx: 30, cz: 6, radius: 6.0, cars: 8, beta: 0.74, bound: 8.0 };
-  const SHUTTLE = { bx: 0, by: 0, bz: -62, amp: 11, beta: 0.78, halfLen: 7, bound: 20.0 };
+  const CAROUSEL = { cx: 30, cz: 6, radius: 6.0, cars: 8, beta: 0.75, bound: 8.0 };
+  const SHUTTLE = { bx: 0, by: 0, bz: -62, amp: 11, beta: 0.75, halfLen: 7, bound: 20.0 };
 
   /* The shuttle is contracted about its centre by its INSTANTANEOUS gamma, which
    * is not a legal rigid motion: while it accelerates its ends move relative to
