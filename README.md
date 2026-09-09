@@ -19,7 +19,14 @@ python -m http.server 8000     # then open http://localhost:8000
 
 ```
 node tools/serve.mjs           # the same, on :8123, with caching turned off
+node tools/serve.mjs --stop    # stop it, however it was started
 ```
+
+Ctrl-C stops it too. `--stop` is there for when it was launched detached and the
+shell that started it is gone: it finds the process by command line, which on
+Windows `pkill` cannot do — that matches POSIX process names and never sees
+`node.exe tools/serve.mjs 8123`. It also stands down by itself after 45 minutes
+with no requests, so a forgotten instance does not sit on the port.
 
 Either works. The node one sends `cache-control: no-store`, which saves you
 hard-reloading after every edit.
