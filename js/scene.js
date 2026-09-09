@@ -167,7 +167,42 @@
   ];
 
   const CAROUSEL = { cx: 30, cz: 6, radius: 6.0, cars: 8, beta: 0.74, bound: 8.0 };
-  const SHUTTLE = { bx: 0, by: 0, bz: -62, amp: 11, beta: 0.88, bound: 20.0 };
+  const SHUTTLE = { bx: 0, by: 0, bz: -62, amp: 11, beta: 0.78, halfLen: 7, bound: 20.0 };
+
+  /* The shuttle is contracted about its centre by its INSTANTANEOUS gamma, which
+   * is not a legal rigid motion: while it accelerates its ends move relative to
+   * its centre, and past a certain speed they exceed c. That matters here for a
+   * specific reason. A vertex at c has a worldline tangent to the light cone, so
+   * g'(a) = 1 + (v.n)/c goes to zero and the retarded time stops being a
+   * well-conditioned function of position: neighbouring vertices solve to wildly
+   * different moments and the mesh tears into spikes. At beta = 0.88 the ends
+   * reached 1.076c and it did.
+   *
+   * The model is only valid while the ends stay comfortably subluminal, so the
+   * parameters are chosen for that. The figure is independent of the speed of
+   * light setting, since omega scales with c too. */
+  function shuttleEndSpeed(S) {
+    const cRef = 1.389, om = (S.beta * cRef) / S.amp;
+    const gamAt = t => {
+      const b = Math.min(Math.abs(S.amp * om * Math.cos(om * t)) / cRef, 0.999999);
+      return 1 / Math.sqrt(1 - b * b);
+    };
+    const at = (t, x) => S.amp * Math.sin(om * t) + x / gamAt(t);
+    const h = 1e-6, period = 2 * Math.PI / om;
+    let worst = 0;
+    for (let i = 0; i < 4000; i++) {
+      const t = (i / 4000) * period;
+      worst = Math.max(worst, Math.abs((at(t + h, S.halfLen) - at(t - h, S.halfLen)) / (2 * h)) / cRef);
+    }
+    return worst;
+  }
+
+  const SHUTTLE_END_BETA = shuttleEndSpeed(SHUTTLE);
+  if (SHUTTLE_END_BETA > 0.93) {
+    console.warn('Shuttle ends reach ' + SHUTTLE_END_BETA.toFixed(3) +
+      'c. The retarded-time solve will be ill-conditioned and the mesh will tear. ' +
+      'Lower SHUTTLE.beta or SHUTTLE.halfLen, or raise SHUTTLE.amp.');
+  }
 
   /* Carousel cars in car-local coordinates: +x along the track, +y up,
    * +z radially outward. The shader spins and contracts them. */

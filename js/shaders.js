@@ -110,18 +110,29 @@ float solveDelay() {
   float d  = length(uMotionA.xyz - uObsPos);
   float lo = max(0.0, (d - uMotionB.z) / uC);
   float hi = (d + uMotionB.z) / uC;
-  float a  = 0.5 * (lo + hi);
+  float a = 0.5 * (lo + hi);
+  float best = a, bestErr = 1e30;
   for (int i = 0; i < 24; ++i) {
     motionAt(uT - a, p, v, n);
     vec3 r = p - uObsPos;
     float rl = max(length(r), 1e-5);
     float g = a - rl / uC;
+
+    // Keep the best point we have actually EVALUATED. Returning the next
+    // candidate instead meant returning a number no one had checked.
+    if (abs(g) < bestErr) { bestErr = abs(g); best = a; }
+
     if (g > 0.0) hi = a; else lo = a;
     float gp = 1.0 + dot(v, r / rl) / uC;
     float an = a - g / max(gp, 0.05);
-    a = (an > lo && an < hi) ? an : 0.5 * (lo + hi);
+
+    // Bounds inclusive. Once Newton converges its candidate IS the bracket
+    // endpoint it just set, and a strict test rejected it there and bisected a
+    // bracket whose far end had never moved — throwing a converged answer away
+    // and landing seconds off, which is what tore the mesh into spikes.
+    a = (an >= lo && an <= hi) ? an : 0.5 * (lo + hi);
   }
-  return max(a, 0.0);
+  return max(best, 0.0);
 #endif
 }
 
