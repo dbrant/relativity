@@ -72,6 +72,7 @@
   /* A surveyor's levelling stave: alternating half-metre bands, so its length is
    * something you can literally count off. */
   function stave(mesh, cx, cy, cz, length, axis) {
+    geo.setDetail(SLENDER_DETAIL);
     const sx = axis === 'z' ? 0.9 : length;
     const sz = axis === 'z' ? length : 0.9;
     geo.box(mesh, cx, cy, cz, sx, 0.9, sz, C.staveA, axis === 'z' ? BAND_Z : BAND_X);
@@ -81,8 +82,9 @@
       const d = -length / 2 + (length * i) / n;
       const px = axis === 'z' ? cx : cx + d;
       const pz = axis === 'z' ? cz + d : cz;
-      geo.cylinder(mesh, px, 0, pz, 0.13, cy - 0.45, C.rail, MATTE, 10);
+      geo.cylinder(mesh, px, 0, pz, 0.13, cy - 0.45, C.rail, MATTE, 18);
     }
+    geo.setDetail(1);
   }
 
   function buildStatic() {
@@ -91,14 +93,16 @@
     geo.mountainRing(m, 1500, 2900, 200, C.hills, HILLS, 7);
 
     // Colonnade down the Z axis.
+    geo.setDetail(SLENDER_DETAIL);
     for (let i = -10; i <= 10; i++) {
       const z = i * 8;
       for (const x of [-8, 8]) {
-        geo.cylinder(m, x, 0, z, 0.42, 6.0, C.stone, MATTE, 22);
+        geo.cylinder(m, x, 0, z, 0.42, 6.0, C.stone, MATTE, 40);
         geo.box(m, x, 6.25, z, 1.3, 0.5, 1.3, C.stoneDark, MATTE);
         geo.box(m, x, 0.14, z, 1.5, 0.28, 1.5, C.stoneDark, MATTE);
       }
     }
+    geo.setDetail(1);
 
     // Arches over the colonnade, standing in the GAPS between columns. The arch
     // passes y = 4.1 m where it crosses x = 8, which is halfway up a column, so
@@ -128,14 +132,18 @@
     }
 
     // Beacons, in front of you and behind, near and far.
+    geo.setDetail(SLENDER_DETAIL);
     BEACONS.forEach((b, i) => {
-      geo.cylinder(m, b[0], 0, b[1], 0.11, b[2], C.rail, MATTE, 10);
-      geo.sphere(m, b[0], b[2] + 0.34, b[1], 0.34, C.beacon, beaconMat(i * 0.11), 20, 14);
+      geo.cylinder(m, b[0], 0, b[1], 0.11, b[2], C.rail, MATTE, 20);
+      geo.sphere(m, b[0], b[2] + 0.34, b[1], 0.34, C.beacon, beaconMat(i * 0.11), 32, 22);
     });
+    geo.setDetail(1);
 
     // Carousel track and hub, left standing still for comparison with its cars.
     flatRing(m, CAROUSEL.cx, CAROUSEL.cz, CAROUSEL.radius - 1.1, CAROUSEL.radius + 1.1, 0.06, C.stoneDark, MATTE);
-    geo.cylinder(m, CAROUSEL.cx, 0, CAROUSEL.cz, 1.0, 3.2, C.stone, MATTE, 20);
+    geo.setDetail(SLENDER_DETAIL);
+    geo.cylinder(m, CAROUSEL.cx, 0, CAROUSEL.cz, 1.0, 3.2, C.stone, MATTE, 40);
+    geo.setDetail(1);
 
     // Plinths for the sculptures, so they read as objects placed in a park
     // rather than dropped on the pavement.
@@ -207,6 +215,12 @@
   /* Movers are cut finer than anything static, by roughly their own stretch
    * factor 1/(1 - beta), so their retarded images stay smooth. */
   const MOVER_DETAIL = 4;
+
+  /* Slender uprights are where the boost's curvature is most obvious: a column
+   * is a straight line six metres long, and the transform bends it into an arc.
+   * Cut at the scenery default it would climb in visible chords. These get their
+   * own budget, in height segments and around the circumference both. */
+  const SLENDER_DETAIL = 3;
 
   /* Carousel cars in car-local coordinates: +x along the track, +y up,
    * +z radially outward. The shader spins and contracts them. */

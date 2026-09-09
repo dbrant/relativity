@@ -85,7 +85,7 @@ become 5. There is no drag term: release the keys and you coast.
 
 ## Deliberate choices
 
-- **Everything is heavily tessellated** (~275k vertices by default). The transform
+- **Everything is heavily tessellated** (~430k vertices by default). The transform
   is applied per vertex and is strongly non-linear, so straight edges genuinely
   bend. A cube drawn with eight vertices would still look like a cube at 0.9c,
   which is a lie.
