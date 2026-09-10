@@ -92,7 +92,7 @@ become 5. There is no drag term: release the keys and you coast.
 
 ## Deliberate choices
 
-- **Everything is heavily tessellated** (~430k vertices by default). The transform
+- **Everything is heavily tessellated** (~485k vertices by default). The transform
   is applied per vertex and is strongly non-linear, so straight edges genuinely
   bend. A cube drawn with eight vertices would still look like a cube at 0.9c,
   which is a lie.
@@ -133,7 +133,21 @@ become 5. There is no drag term: release the keys and you coast.
 | the beacons | all flash once per second of *world* time; their apparent rate is a Doppler readout you can count |
 | the carousel | cars contracted by their own motion, each seen at a different retarded moment; the receding half is beamed nearly to black |
 | the shuttle | slides along X, so its contraction breathes in and out as it goes; its flanks carry a photographic decal |
+| the Ferris wheel | gondolas that hang level, so each is in pure translation and its contraction axis sweeps round with the ride; broadside to the corridor, so running past puts you alongside the cars at the top and head-on to those at the bottom |
 | two sculptures | STL models on plinths, flanking the colonnade |
+
+The wheel is the one place velocity addition is visible as a single picture. Its
+cars run at 0.75 `c` and its top and bottom are moving opposite ways, so at a
+matching 0.75 `c` down the corridor the cars overhead stop dead relative to you
+while the ones at the bottom pass at 0.96 `c` — not the 1.5 `c` of adding them.
+
+Its structure and its cars are specified in different frames, on purpose. Each
+gondola has a rest frame, so it is given at rest and contracted along its own
+motion, exactly like a carousel car. The rim does not: a rigidly rotating ring
+has no global rest frame to be designed in, which is Ehrenfest's paradox, and
+the material genuinely is strained in its own frame. So the rim's *worldlines*
+are given directly in the world frame instead. They are subluminal and
+self-consistent, which is the whole of what the renderer is entitled to ask.
 
 ## STL models
 

@@ -27,7 +27,7 @@
 
   const ADAPT_TAU = 0.30;        // seconds for the eye to catch up
 
-  const ACCEL = 1.25;            // proper acceleration, in rapidity per second
+  const ACCEL = 0.25;            // proper acceleration, in rapidity per second
   const BRAKE_DECAY = 6.0;
   const BETA_MAX = 0.99999;
   const EYE_MIN = 0.6, EYE_MAX = 400;
@@ -232,6 +232,8 @@
     R3.progSky = GL.program(g, variant(SH.VERT, '#define MOTION 0\n'), SH.FRAG_SKY, 'sky');
     R3.progCar = GL.program(g, variant(SH.VERT, '#define MOTION 1\n'), SH.FRAG_WORLD, 'carousel');
     R3.progShuttle = GL.program(g, variant(SH.VERT, '#define MOTION 2\n'), SH.FRAG_WORLD, 'shuttle');
+    R3.progWheel = GL.program(g, variant(SH.VERT, '#define MOTION 3\n'), SH.FRAG_WORLD, 'ferris wheel');
+    R3.progGondola = GL.program(g, variant(SH.VERT, '#define MOTION 4\n'), SH.FRAG_WORLD, 'gondolas');
 
     R3.mWorld = GL.uploadMesh(g, R3.progWorld, SCENE.buildStatic());
     R3.groundCache = [];
@@ -239,6 +241,8 @@
     R3.mSky = GL.uploadMesh(g, R3.progSky, SCENE.buildSky());
     R3.mCar = GL.uploadMesh(g, R3.progCar, SCENE.buildCarousel());
     R3.mShuttle = GL.uploadMesh(g, R3.progShuttle, SCENE.buildShuttle());
+    R3.mWheel = GL.uploadMesh(g, R3.progWheel, SCENE.buildWheel());
+    R3.mGondolas = GL.uploadMesh(g, R3.progGondola, SCENE.buildGondolas());
 
     R3.lut = COLOR.buildLut(g);
     R3.decal = g.createTexture();
@@ -258,7 +262,8 @@
   }
 
   function totalVerts() {
-    return [R3.mWorld, R3.mGround, R3.mSky, R3.mCar, R3.mShuttle, R3.mModels]
+    return [R3.mWorld, R3.mGround, R3.mSky, R3.mCar, R3.mShuttle,
+            R3.mWheel, R3.mGondolas, R3.mModels]
       .reduce((n, m) => n + (m ? m.verts : 0), 0);
   }
 
@@ -407,6 +412,19 @@
     g.uniform4f(R3.progShuttle.u.uMotionA, T.bx, T.by, T.bz, T.amp);
     g.uniform4f(R3.progShuttle.u.uMotionB, (T.beta * S.c) / T.amp, 1, T.bound, 0);
     drawMesh(R3.mShuttle);
+
+    // The Ferris wheel: its structure turns rigidly, its gondolas hang level and
+    // translate. Different motions, same hub and same rate, so one pair of
+    // uniforms serves both programs.
+    const W = SCENE.WHEEL;
+    const wOmega = (W.beta * S.c) / W.radius;
+    const wGamma = 1 / Math.sqrt(1 - W.beta * W.beta);
+    for (const [p, mesh] of [[R3.progWheel, R3.mWheel], [R3.progGondola, R3.mGondolas]]) {
+      setCommon(p, kin, bd);
+      g.uniform4f(p.u.uMotionA, W.cx, W.cy, W.cz, W.radius);
+      g.uniform4f(p.u.uMotionB, wOmega, wGamma, W.bound, 0);
+      drawMesh(mesh);
+    }
 
     return { fwd, bd };
   }

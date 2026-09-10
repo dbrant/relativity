@@ -12,6 +12,11 @@
  *   the carousel         cars contracted by their OWN motion, seen at different
  *                        retarded times around the ring
  *   the shuttle          slides along X, so its contraction breathes in and out
+ *   the Ferris wheel     gondolas hanging level, so each is in pure translation
+ *                        and its contraction axis sweeps around with the ride;
+ *                        broadside to the corridor, so running past it puts you
+ *                        alongside the cars at the top and head-on to those at
+ *                        the bottom
  */
 (function (R) {
   'use strict';
@@ -108,7 +113,7 @@
     // passes y = 4.1 m where it crosses x = 8, which is halfway up a column, so
     // sharing a z with one buries it in the stonework.
     for (const z of [44, 20, -4, -28]) {
-      geo.torusXY(m, 0, 0, z, 9.0, 0.42, C.copper, POLISH, 96, 14);
+      geo.torus(m, 0, 0, z, 9.0, 0.42, C.copper, POLISH, 96, 14);
     }
 
     // The matched pair of staves. Identical, one along each axis.
@@ -120,12 +125,15 @@
       (x, y) => (Math.floor(y / 2.5) & 1) ? C.basalt : C.stone);
     geo.box(m, 0, 0, -96, 5.2, 0.9, 5.2, C.stoneDark, MATTE);
 
-    // Scattered blocks for parallax.
+    // Scattered blocks for parallax, kept out of the corridor and off the rides.
     const r = rng(20250907);
+    const clear = (x, z, cx, cz, half) => Math.abs(x - cx) < half && Math.abs(z - cz) < half;
     for (let i = 0; i < 74; i++) {
       const x = (r() - 0.5) * 150;
       const z = (r() - 0.5) * 190;
-      if (Math.abs(x) < 13 || (Math.abs(x - 30) < 12 && Math.abs(z - 6) < 12)) continue;
+      if (Math.abs(x) < 13) continue;
+      if (clear(x, z, CAROUSEL.cx, CAROUSEL.cz, 12)) continue;
+      if (clear(x, z, WHEEL.cx, WHEEL.cz, 13)) continue;
       if (MODELS.some(o => Math.hypot(x - o.x, z - o.z) < 4)) continue;
       const s = 0.7 + r() * 2.1;
       geo.box(m, x, s / 2, z, s, s, s * (0.7 + r() * 0.7), CUBES[(r() * CUBES.length) | 0], MATTE);
@@ -144,6 +152,31 @@
     geo.setDetail(SLENDER_DETAIL);
     geo.cylinder(m, CAROUSEL.cx, 0, CAROUSEL.cz, 1.0, 3.2, C.stone, MATTE, 40);
     geo.setDetail(1);
+
+    // The Ferris wheel's tower: two A-frames straddling the wheel, and the axle
+    // they carry. All of it stands still, so it measures the ride against
+    // something at rest — and the legs pass OUTSIDE the rims, as a real one's
+    // do, which is what leaves the wheel free to turn between them.
+    geo.setDetail(SLENDER_DETAIL);
+    for (const sx of [-1, 1]) {
+      const x = WHEEL.cx + sx * WHEEL.legX;
+      const top = [x, WHEEL.cy, WHEEL.cz];
+      for (const sz of [-1, 1]) {
+        const foot = [x, 0, WHEEL.cz + sz * WHEEL.legZ];
+        geo.tube(m, foot, top, 0.30, C.rail, MATTE, 20);
+        geo.box(m, foot[0], 0.16, foot[2], 1.3, 0.32, 1.3, C.stoneDark, MATTE);
+      }
+      // Tie beam across each A-frame, spanning it at 55% of the way up, where
+      // the legs have already leaned in to 45% of their spread.
+      const ty = WHEEL.cy * 0.55, tz = WHEEL.legZ * 0.45;
+      geo.tube(m, [x, ty, WHEEL.cz - tz], [x, ty, WHEEL.cz + tz], 0.12, C.rail, MATTE, 14);
+    }
+    const ax = WHEEL.legX + 0.4;
+    geo.tube(m, [WHEEL.cx - ax, WHEEL.cy, WHEEL.cz], [WHEEL.cx + ax, WHEEL.cy, WHEEL.cz],
+      0.30, C.stoneDark, POLISH, 28);
+    geo.setDetail(1);
+    // Boarding platform, under the lowest car.
+    geo.box(m, WHEEL.cx, 0.15, WHEEL.cz, 5.4, 0.30, 4.2, C.stoneDark, MATTE);
 
     // Plinths for the sculptures, so they read as objects placed in a park
     // rather than dropped on the pavement.
@@ -176,6 +209,29 @@
 
   const CAROUSEL = { cx: 30, cz: 6, radius: 6.0, cars: 8, beta: 0.75, bound: 8.0 };
   const SHUTTLE = { bx: 0, by: 0, bz: -62, amp: 11, beta: 0.75, halfLen: 7, bound: 20.0 };
+
+  /* The Ferris wheel, facing the carousel across the park. Its axle runs along
+   * X, so the wheel stands BROADSIDE to the corridor — which is the whole point
+   * of putting it here. Run down Z at speed and the cars at the top of the wheel
+   * are moving the way you are, while the cars at the bottom are coming the
+   * other way: Einstein velocity addition, side by side in one object. At 0.75c
+   * each way the top cars nearly stop relative to you, and the bottom cars pass
+   * at 0.96c.
+   *
+   * `radius` is the circle the PIVOTS ride; the cars hang below it. */
+  const WHEEL = {
+    cx: -30, cy: 12.0, cz: 6,
+    radius: 9.0, cars: 10, beta: 0.75,
+    hang: 1.30,            // pivot down to the centre of a car
+    car: [1.8, 1.7, 2.0],  // along the axle, up, along the corridor
+    // The rims sit either side of the centreline, and the cars swing BETWEEN
+    // them: a car hung from a pivot up on the shoulder of the wheel sweeps well
+    // inside the rim circle, so anything narrower than the car would be sliced
+    // through by it. Everything below is spaced off this one number.
+    halfWidth: 1.4,
+    legX: 2.2, legZ: 7.0,  // where the A-frames stand, clear of the rims
+    bound: 12.0
+  };
 
   /* The shuttle is contracted about its centre by its INSTANTANEOUS gamma, which
    * is not a legal rigid motion: while it accelerates its ends move relative to
@@ -237,6 +293,86 @@
     }
     geo.setDetail(1);
     return m;
+  }
+
+  /* The wheel's structure, in hub-local coordinates at phase zero: x along the
+   * axle, y up, z along the corridor. The shader turns the whole thing rigidly.
+   *
+   * Two rims rather than one, braced across, because a single ring gives the eye
+   * nothing to judge the wheel's tilt by — and at speed the two rims are seen at
+   * measurably different retarded times, which shears them apart. */
+  function buildWheel() {
+    const m = new geo.Mesh();
+    const R = WHEEL.radius, X = WHEEL.halfWidth;
+    geo.setDetail(MOVER_DETAIL);
+    // 384 segments around, not the torus default of 64: the rim is 57 m of
+    // circumference travelling at 0.76c, and the light cone stretches its image
+    // along its motion by 1/(1 - beta), so a chord cut for its rest size gets
+    // drawn four times longer than it was meant to be. This puts the segments
+    // at 15 cm, which is what MOVER_DETAIL asks of everything else here.
+    for (const x of [-X, X]) geo.torus(m, x, 0, 0, R, 0.16, C.rail, POLISH, 384, 12, 'x');
+    for (let i = 0; i < WHEEL.cars; i++) {
+      // A pair of spokes out to each pivot...
+      const a = (i / WHEEL.cars) * Math.PI * 2;
+      const ry = Math.cos(a) * R, rz = Math.sin(a) * R;
+      for (const x of [-X, X]) geo.tube(m, [x, 0, 0], [x, ry, rz], 0.07, C.rail, MATTE, 12);
+      // ...and the bracing between the rims halfway BETWEEN the pivots, which
+      // keeps the centreline clear for the gondolas' masts. Rotor and cars turn
+      // at one rate, so that half-spacing holds for good.
+      const b = a + Math.PI / WHEEL.cars;
+      const by = Math.cos(b) * R, bz = Math.sin(b) * R;
+      geo.tube(m, [-X, by, bz], [X, by, bz], 0.09, C.rail, MATTE, 12);
+    }
+    // The drum turning on the axle inside it.
+    geo.tube(m, [-X - 0.1, 0, 0], [X + 0.1, 0, 0], 0.80, C.stone, POLISH, 40);
+    geo.setDetail(1);
+    return m;
+  }
+
+  /* The gondolas, each in its own rest frame, positioned relative to its pivot.
+   * They hang level and never turn over, so a car is in pure translation: every
+   * point of it shares one velocity, and the contraction is a single squash
+   * along a direction that rotates once per revolution. */
+  function buildGondolas() {
+    const m = new geo.Mesh();
+    const [sx, sy, sz] = WHEEL.car, cy = -WHEEL.hang;
+    geo.setDetail(MOVER_DETAIL);
+    for (let i = 0; i < WHEEL.cars; i++) {
+      const ph = (i / WHEEL.cars) * Math.PI * 2;
+      const body = CUBES[(i * 3) % CUBES.length];
+      geo.box(m, 0, cy, 0, sx, sy, sz, body, [0, ph, 0]);
+      geo.box(m, 0, cy + sy / 2 + 0.08, 0, sx + 0.2, 0.16, sz + 0.2, C.stone, [3, ph, 0]);
+      // Mast, from the roof up past the pivot. It runs along the centreline,
+      // between the two rims, which is why the bracing is not put there.
+      geo.tube(m, [0, cy + sy / 2 + 0.16, 0], [0, 0.28, 0], 0.09, C.rail, MATTE, 14);
+      // A lamp on top of each mast, each on its own blink phase: ten Doppler
+      // readouts going round, and the ones climbing toward you flash faster
+      // than the ones falling away.
+      geo.sphere(m, 0, 0.28, 0, 0.18, C.beacon, [2, ph, i * 0.1], 26, 18);
+    }
+    geo.setDetail(1);
+    return m;
+  }
+
+  /* Worst vertex speed anywhere on the wheel, for the same reason the shuttle
+   * has one: the retarded-time solve loses conditioning as a vertex approaches
+   * c, and a mesh that tears is the symptom. A gondola's own points would all
+   * share its 0.75c if the contraction axis held still, but it turns with the
+   * car, and that carries the far corners round a little faster.
+   *
+   * |v| = omega * hypot(R + k * pr, k * pu) with k = 1 - 1/gamma, which over a
+   * corner at fixed distance from the pivot is largest when the corner is
+   * straight out along the radius. */
+  function wheelPeakBeta(W) {
+    const g = 1 / Math.sqrt(1 - W.beta * W.beta);
+    const reach = Math.hypot(W.hang + W.car[1] / 2, W.car[2] / 2);
+    return (W.beta * (W.radius + (1 - 1 / g) * reach)) / W.radius;
+  }
+
+  const WHEEL_PEAK_BETA = wheelPeakBeta(WHEEL);
+  if (WHEEL_PEAK_BETA > 0.93) {
+    console.warn('Ferris wheel corners reach ' + WHEEL_PEAK_BETA.toFixed(3) +
+      'c. Shorten WHEEL.hang or the car, or widen WHEEL.radius.');
   }
 
   /* The shuttle in its own rest frame: 14 m of clearly-marked length. */
@@ -308,10 +444,11 @@
   }
 
   R.scene = {
-    buildStatic, buildCarousel, buildShuttle, buildSky, buildGround, GROUND_LEVELS, MODELS,
+    buildStatic, buildCarousel, buildShuttle, buildWheel, buildGondolas,
+    buildSky, buildGround, GROUND_LEVELS, MODELS,
     BAND_COLOR: C.staveB, BAND_WIDTH, TEXTURE_FILE,
     adaptiveGroundLevel,
-    CAROUSEL, SHUTTLE, BEACONS,
+    CAROUSEL, SHUTTLE, WHEEL, BEACONS,
     start: { x: 0, y: 2.0, z: 46, yaw: 0, pitch: -0.02 }
   };
 })(window.Rel = window.Rel || {});

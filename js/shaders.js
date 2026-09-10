@@ -72,7 +72,7 @@ void motionAt(float t, out vec3 p, out vec3 v, out vec3 n) {
   v = om * (tng * (Rt + loc.z) - rdl * loc.x);
   n = tng * aNormal.x + vec3(0.0, aNormal.y, 0.0) + rdl * aNormal.z;
 }
-#else
+#elif MOTION == 2
 // Shuttle: slides back and forth along world X. Its contraction breathes with
 // its speed, which is the whole point of watching it.
 void motionAt(float t, out vec3 p, out vec3 v, out vec3 n) {
@@ -85,6 +85,56 @@ void motionAt(float t, out vec3 p, out vec3 v, out vec3 n) {
   p = uMotionA.xyz + vec3(s + aPos.x / g, aPos.y, aPos.z);
   v = vec3(sd, 0.0, 0.0);
   n = aNormal;
+}
+#elif MOTION == 3
+// Ferris wheel structure — rim, spokes, bracing — turning rigidly about an axle
+// that lies along world X through uMotionA.xyz. aPos is the offset from the hub
+// at phase zero.
+//
+// This one is specified in the WORLD frame on purpose. A rigidly rotating ring
+// has no rest frame to be designed in: that is Ehrenfest's paradox, and the
+// material really is strained in its own frame. Giving the worldlines directly
+// sidesteps the argument. They are subluminal and self-consistent, which is all
+// the renderer is entitled to ask for. (The gondolas below are different — each
+// one does have a rest frame, so each one gets contracted.)
+void motionAt(float t, out vec3 p, out vec3 v, out vec3 n) {
+  float om = uMotionB.x;
+  float th = om * t;
+  float ct = cos(th), st = sin(th);
+  vec3 q = vec3(aPos.x, aPos.y * ct - aPos.z * st, aPos.y * st + aPos.z * ct);
+  p = uMotionA.xyz + q;
+  v = om * vec3(0.0, -q.z, q.y);
+  n = vec3(aNormal.x, aNormal.y * ct - aNormal.z * st, aNormal.y * st + aNormal.z * ct);
+}
+#else
+// Ferris wheel gondolas. Each hangs from a pivot on the rim and stays level, so
+// it is in pure translation: every point of a car shares one velocity, and the
+// car is contracted along that one direction. The direction sweeps around as
+// the car rides the wheel, so a gondola is squat at the top and bottom, where it
+// is travelling horizontally, and pinched at the sides, where it is travelling
+// vertically. Contraction you can watch rotate.
+//
+// aPos is the offset from the pivot; aMat.y is where the car sits on the wheel.
+void motionAt(float t, out vec3 p, out vec3 v, out vec3 n) {
+  float om = uMotionB.x, Rw = uMotionA.w, g = uMotionB.y;
+  float th = om * t + aMat.y;
+  vec3 rad = vec3(0.0, cos(th), sin(th));    // hub -> pivot
+  vec3 tng = vec3(0.0, -sin(th), cos(th));   // direction of travel
+  float k = 1.0 - 1.0 / g;
+  float pr = dot(aPos, rad), pu = dot(aPos, tng);
+
+  p = uMotionA.xyz + Rw * rad + aPos - k * pu * tng;
+  // The contraction axis turns with the car, so the squashing itself moves the
+  // material about: that is the second term, and it is why the corners of a
+  // gondola run a shade faster than its centre. Small here — 0.75c becomes
+  // 0.82c at the worst corner — but it belongs in v, which sets both the source
+  // Doppler and the derivative the retarded-time solve steers by.
+  v = om * (Rw * tng + k * (pr * tng + pu * rad));
+  // Normals go by the inverse transpose: a scale of 1/g along tng scales them
+  // by g along tng. Faces at an angle to the motion genuinely tilt as the body
+  // is squashed, and on a gondola the motion is at an angle to almost every
+  // face for almost all of the ride.
+  n = normalize(aNormal + (g - 1.0) * dot(aNormal, tng) * tng);
 }
 #endif
 

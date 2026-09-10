@@ -169,17 +169,58 @@
     });
   }
 
-  /* Torus standing upright in the XY plane (an arch you can walk through). */
-  function torusXY(mesh, cx, cy, cz, major, minor, color, mat, nu, nv) {
+  /* A round bar between two arbitrary points, capped at both ends.
+   *
+   * `cylinder` only stands upright, which is fine for a colonnade and no use at
+   * all for a wheel: spokes, legs and axles all run at angles. Segmented along
+   * its length like everything else here, because a 9 m spoke is a straight line
+   * that the boost draws as an arc. */
+  function tube(mesh, a, b, radius, color, mat, radial) {
+    const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+    const len = Math.hypot(d[0], d[1], d[2]);
+    if (len < 1e-6) return;
+    const w = [d[0] / len, d[1] / len, d[2] / len];
+    const cross = (p, q) => [p[1] * q[2] - p[2] * q[1], p[2] * q[0] - p[0] * q[2], p[0] * q[1] - p[1] * q[0]];
+    const unit = p => { const l = Math.hypot(p[0], p[1], p[2]); return [p[0] / l, p[1] / l, p[2] / l]; };
+    // Any seed not parallel to the bar; which one is picked only rotates the
+    // seam, and the bar is round, so it does not matter where the seam lands.
+    const u = unit(cross(Math.abs(w[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0], w));
+    const v = cross(w, u);
+    const nu = radial || 16, nv = seg(len, 0.7);
+    const ring = (s, k, rr) => {
+      const ca = Math.cos(s * Math.PI * 2), sa = Math.sin(s * Math.PI * 2);
+      const n = [u[0] * ca + v[0] * sa, u[1] * ca + v[1] * sa, u[2] * ca + v[2] * sa];
+      return [[a[0] + w[0] * len * k + n[0] * rr,
+               a[1] + w[1] * len * k + n[1] * rr,
+               a[2] + w[2] * len * k + n[2] * rr], n];
+    };
+    patch(mesh, nu, nv, color, mat, (s, k) => ring(s, k, radius));
+    // Both ends closed. An open end seen head-on reads as a dark hole, since
+    // the shader draws surfaces turned away from you as unlit interior.
+    for (const [k, cn] of [[0, [-w[0], -w[1], -w[2]]], [1, w]]) {
+      patch(mesh, nu, 2, color, mat, (s, r) => [ring(s, k, radius * r)[0], cn]);
+    }
+  }
+
+  /* Torus lying in the plane perpendicular to `axis` — 'z' by default, which is
+   * an arch standing in the XY plane that you can walk through; 'x' is a wheel
+   * seen broadside from along the corridor. */
+  function torus(mesh, cx, cy, cz, major, minor, color, mat, nu, nv, axis) {
     nu = nu || 64; nv = nv || 14;
+    const A = axis === 'x' ? 0 : axis === 'y' ? 1 : 2;
+    const e = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    e[0][(A + 1) % 3] = 1;   // spans the ring plane
+    e[1][(A + 2) % 3] = 1;
+    e[2][A] = 1;             // the axle
     patch(mesh, nu, nv, color, mat, (u, v) => {
       const a = u * Math.PI * 2, b = v * Math.PI * 2;
-      const dir = [Math.cos(a), Math.sin(a), 0];
-      const n = [dir[0] * Math.cos(b), dir[1] * Math.cos(b), Math.sin(b)];
+      const ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
+      const dir = [e[0][0] * ca + e[1][0] * sa, e[0][1] * ca + e[1][1] * sa, e[0][2] * ca + e[1][2] * sa];
+      const n = [dir[0] * cb + e[2][0] * sb, dir[1] * cb + e[2][1] * sb, dir[2] * cb + e[2][2] * sb];
       return [[
         cx + dir[0] * major + n[0] * minor,
         cy + dir[1] * major + n[1] * minor,
-        cz + n[2] * minor
+        cz + dir[2] * major + n[2] * minor
       ], n];
     });
   }
@@ -237,6 +278,6 @@
     });
   }
 
-  R.geo = { Mesh, patch, box, cylinder, sphere, torusXY, groundDisc, skyDome, mountainRing,
+  R.geo = { Mesh, patch, box, cylinder, tube, sphere, torus, groundDisc, skyDome, mountainRing,
             seg, setDetail, STRIDE };
 })(window.Rel = window.Rel || {});
