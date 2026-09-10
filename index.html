@@ -25,16 +25,31 @@
   <button type="button" id="open-panel">Settings <kbd>Tab</kbd></button>
 </nav>
 
-<section class="hud panel" id="kinematics" aria-label="Motion readout">
-  <p class="eyebrow">Your velocity</p>
-  <div class="big"><span id="v-speed">0.00</span><span>km/h</span></div>
-  <dl class="rows">
-    <div class="row"><dt>&beta;: &nbsp;v / c</dt><dd id="v-beta">0.0000</dd></div>
-    <div class="row"><dt>&gamma;: &nbsp;Lorentz factor</dt><dd id="v-gamma">1.000</dd></div>
-    <div class="row"><dt>Lengths ahead</dt><dd id="v-contract">&times; 1.0000</dd></div>
-  </dl>
-  <div id="rapidity" aria-hidden="true"><i id="v-rapid"></i></div>
-</section>
+<div class="hud" id="instruments">
+  <section class="panel" id="kinematics" aria-label="Motion readout">
+    <p class="eyebrow">Your velocity</p>
+    <div class="big"><span id="v-speed">0.00</span><span>km/h</span></div>
+    <dl class="rows">
+      <div class="row"><dt>&beta;: &nbsp;v / c</dt><dd id="v-beta">0.0000</dd></div>
+      <div class="row"><dt>&gamma;: &nbsp;Lorentz factor</dt><dd id="v-gamma">1.000</dd></div>
+      <div class="row"><dt>Lengths ahead</dt><dd id="v-contract">&times; 1.0000</dd></div>
+    </dl>
+    <div id="rapidity" aria-hidden="true"><i id="v-rapid"></i></div>
+  </section>
+
+  <div class="panel" id="gauge" aria-hidden="true">
+    <div id="spectrum-wrap">
+      <div id="spectrum"></div>
+      <div id="rest-tick"></div>
+      <div id="marker"></div>
+    </div>
+    <p class="caption">
+      <span>Doppler at crosshair</span>
+      <b id="v-dop">1.000</b>
+      <span id="v-dopword">at rest</span>
+    </p>
+  </div>
+</div>
 
 <section class="hud panel" id="clocks" aria-label="Clocks">
   <p class="eyebrow">Elapsed</p>
@@ -47,19 +62,6 @@
 
 <div class="hud" id="reticle" aria-hidden="true">
   <div class="cross"></div>
-</div>
-
-<div class="hud" id="gauge" aria-hidden="true">
-  <div id="spectrum-wrap">
-    <div id="spectrum"></div>
-    <div id="rest-tick"></div>
-    <div id="marker"></div>
-  </div>
-  <p class="caption">
-    <span>Doppler at crosshair</span>
-    <b id="v-dop">1.000</b>
-    <span id="v-dopword">at rest</span>
-  </p>
 </div>
 
 <div class="hud" id="galilean">Galilean view (aberration off)</div>

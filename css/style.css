@@ -166,11 +166,28 @@ button {
 
 /* ------------------------------------------------------------- readouts --- */
 
-#kinematics {
+/* The left-hand instrument column. Stacked rather than each panel carrying its
+   own offset from the bottom: the gauge's height is set by its content, and a
+   hand-tuned `bottom` for whatever sits above it goes stale the moment that
+   content changes. Anchored at the bottom, the stack grows upward on its own. */
+#instruments {
   left: var(--pad);
   bottom: var(--pad);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;   /* both panels take the column's width */
+  gap: 9px;
+  /* Fixed, not shrink-to-fit. Left to size itself the column would track its
+     widest line, and the gauge's caption changes as you move: "1.000 AT REST"
+     becomes "447.214 BLUESHIFT" near c. The velocity panel above would then
+     visibly resize while you accelerate. 294px is what the longest caption
+     needs, and it also restores the spectrum bar to the 268px it was drawn
+     for. */
+  width: 294px;
+}
+
+#kinematics {
   padding: 12px 16px 13px;
-  min-width: 252px;
 }
 
 #kinematics .big {
@@ -295,27 +312,22 @@ button {
 .cross::before { left: 50%; top: 0; width: 1px; height: 100%; transform: translateX(-50%); }
 .cross::after { top: 50%; left: 0; height: 1px; width: 100%; transform: translateY(-50%); }
 
-/* The Doppler gauge reads the centre of the view but lives down with the other
-   instruments, so it never sits in front of what it is measuring. */
+/* The Doppler gauge reads the centre of the view but lives down in the corner
+   with the other instruments, so it never sits in front of what it is
+   measuring. It takes the same .panel treatment as the readout above it: now
+   that the two share an edge, a lighter fill of its own read as an accident. */
 #gauge {
-  bottom: 64px;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 7px;
   padding: 9px 12px 8px;
-  background: rgba(9, 13, 19, 0.62);
-  border: 1px solid var(--edge);
-  border-radius: var(--radius);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 
+/* The bar spans whatever width the column settles at. Both the rest tick and
+   the marker are placed as percentages, so nothing here depends on it. */
 #spectrum-wrap {
   position: relative;
-  width: 268px;
+  align-self: stretch;
   height: 9px;
 }
 
@@ -352,10 +364,12 @@ button {
   display: flex;
   align-items: baseline;
   gap: 8px;
+  margin: 0;   /* it is a <p>, and the UA margin would open a gap under the bar */
   font-size: 11px;
   color: var(--dim);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
 }
+
+#gauge .caption span:first-child { margin-right: auto; }
 
 #gauge .caption b { color: var(--ink); font-weight: 500; }
 #v-dopword { font-family: var(--label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; }
@@ -385,7 +399,7 @@ button {
 #hint em { font-style: normal; color: var(--ink); }
 
 #galilean {
-  bottom: 144px;   /* clears the 72px-tall gauge below it */
+  bottom: 68px;   /* clears the two hint rows below it */
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--label);
@@ -654,9 +668,13 @@ legend { padding: 0 0 8px; }
   #kinematics, #clocks { min-width: 0; padding: 9px 12px 10px; }
   #kinematics .big span:first-child { font-size: 26px; }
   #masthead p, #hint { display: none; }
-  #spectrum-wrap { width: 200px; }
-  #gauge { bottom: 16px; }
-  #galilean { bottom: 96px; }
+  /* Narrow enough that 294px would crowd the clocks, so the column goes back to
+     sizing itself and the caption is allowed to fall onto a second line rather
+     than push the column wider. With the hints hidden there is nothing under
+     the Galilean banner to clear. */
+  #instruments { width: auto; }
+  #gauge .caption { flex-wrap: wrap; }
+  #galilean { bottom: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
