@@ -339,16 +339,22 @@
     geo.setDetail(MOVER_DETAIL);
     for (let i = 0; i < WHEEL.cars; i++) {
       const ph = (i / WHEEL.cars) * Math.PI * 2;
+      /* Every part of a car has to carry that car's phase. A part left on the
+       * default phase 0 is not merely misplaced: all ten copies of it land on
+       * top of each other on whichever car sits at phase 0, and it disappears
+       * from the other nine. The masts were built with a bare MATTE and did
+       * exactly that. Going through here makes the phase impossible to omit. */
+      const rides = (kind, blink) => [kind, ph, blink || 0];
       const body = CUBES[(i * 3) % CUBES.length];
-      geo.box(m, 0, cy, 0, sx, sy, sz, body, [0, ph, 0]);
-      geo.box(m, 0, cy + sy / 2 + 0.08, 0, sx + 0.2, 0.16, sz + 0.2, C.stone, [3, ph, 0]);
+      geo.box(m, 0, cy, 0, sx, sy, sz, body, rides(0));
+      geo.box(m, 0, cy + sy / 2 + 0.08, 0, sx + 0.2, 0.16, sz + 0.2, C.stone, rides(3));
       // Mast, from the roof up past the pivot. It runs along the centreline,
       // between the two rims, which is why the bracing is not put there.
-      geo.tube(m, [0, cy + sy / 2 + 0.16, 0], [0, 0.28, 0], 0.09, C.rail, MATTE, 14);
+      geo.tube(m, [0, cy + sy / 2 + 0.16, 0], [0, 0.28, 0], 0.09, C.rail, rides(0), 14);
       // A lamp on top of each mast, each on its own blink phase: ten Doppler
       // readouts going round, and the ones climbing toward you flash faster
       // than the ones falling away.
-      geo.sphere(m, 0, 0.28, 0, 0.18, C.beacon, [2, ph, i * 0.1], 26, 18);
+      geo.sphere(m, 0, 0.28, 0, 0.18, C.beacon, rides(2, i * 0.1), 26, 18);
     }
     geo.setDetail(1);
     return m;
