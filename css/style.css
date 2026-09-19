@@ -398,7 +398,7 @@ button {
 
 #hint em { font-style: normal; color: var(--ink); }
 
-#galilean {
+#galilean, #paused {
   bottom: 68px;   /* clears the two hint rows below it */
   left: 50%;
   transform: translateX(-50%);
@@ -415,7 +415,9 @@ button {
   transition: opacity 0.2s;
 }
 
-#galilean.is-on { opacity: 1; }
+#galilean.is-on, #paused.is-on { opacity: 1; }
+
+#paused { bottom: 92px; }   /* stacks above the Galilean badge when both are on */
 
 /* ------------------------------------------------------------- overlay ---- */
 

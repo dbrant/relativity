@@ -22,6 +22,7 @@
     eyeAdapt: true,
     adapt: 1.0,                  // current state of the observer's eye
     resScale: 1.0,
+    paused: false,               // freeze-frame: the world stops, the mouse still looks
     running: false
   };
 
@@ -115,6 +116,7 @@
       if (e.code === 'Tab') { e.preventDefault(); togglePanel(); return; }
       if (e.code === 'KeyR') { resetObserver(); return; }
       if (e.code === 'KeyH') { toggleHelp(); return; }
+      if (e.code === 'KeyP') { togglePause(); return; }
       const a = CODE[e.code];
       if (a) {
         if (overlayUp()) begin();                    // just walking gets you in
@@ -504,6 +506,17 @@
   function togglePanel() { hud.panel.classList.toggle('is-open'); }
   function toggleHelp() { hud.help.classList.toggle('is-open'); }
 
+  /* A freeze-frame, not a brake. Space sheds your own velocity while the world
+   * runs on; this stops the world too, both clocks included, and leaves the
+   * mouse free, so a carousel car can be studied at the retarded moment it was
+   * caught in. Held keys are left as they are: a walk interrupted by P picks up
+   * again on the first frame after it. */
+  function togglePause() {
+    S.paused = !S.paused;
+    hud.paused.classList.toggle('is-on', S.paused);
+    hud.pauseLabel.textContent = S.paused ? 'Resume' : 'Pause';
+  }
+
   function syncControls() {
     for (const k in S.fx) {
       const el = document.getElementById('fx-' + k);
@@ -552,6 +565,7 @@
     document.getElementById('help-close').addEventListener('click', toggleHelp);
     document.getElementById('open-panel').addEventListener('click', togglePanel);
     document.getElementById('open-help').addEventListener('click', toggleHelp);
+    document.getElementById('open-pause').addEventListener('click', togglePause);
     syncControls();
   }
 
@@ -629,6 +643,8 @@
       panel: document.getElementById('panel'),
       help: document.getElementById('help'),
       galilean: document.getElementById('galilean'),
+      paused: document.getElementById('paused'),
+      pauseLabel: document.getElementById('pause-label'),
       spectrum: document.getElementById('spectrum'),
       marker: document.getElementById('marker'),
       speed: document.getElementById('v-speed'),
@@ -662,9 +678,13 @@
 
     let last = performance.now(), acc = 0, frames = 0, hudAcc = 0;
     function frame(now) {
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      frames++; acc += dt; hudAcc += dt;
+      const real = Math.min(0.05, (now - last) / 1000);
+      last = now;                        // even while paused, or resuming would jump
+      // A zero step is a complete freeze: no rapidity is added, no distance is
+      // covered, neither clock ticks, and the eye's adaptation stays put. The
+      // frame is still drawn, so looking around keeps working.
+      const dt = S.paused ? 0 : real;
+      frames++; acc += real; hudAcc += real;
 
       const kin = step(dt);
       if (S.groundAdaptive) {
