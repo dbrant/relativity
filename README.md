@@ -159,7 +159,7 @@ with:
 
 ## Controls
 
-`W A S D` or arrow keys to accelerate · mouse cursor to look around while moving · `Space` to stop · `Q`/`E` drop and rise · `R` reset to start · `Tab` settings · `H` field guide (help).
+`W A S D` or arrow keys to accelerate · mouse cursor to look around while moving · `Space` to stop · `P` pause the world · `Q`/`E` drop and rise · `R` reset to start · `Tab` settings · `H` field guide (help).
 
 The various relativistic effects can be turned on or off with these keys: `L` light-travel delay, `G` aberration and
 contraction, `C` Doppler color, `B` relativistic beaming.

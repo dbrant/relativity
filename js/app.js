@@ -22,6 +22,7 @@
     eyeAdapt: true,
     adapt: 1.0,                  // current state of the observer's eye
     resScale: 1.0,
+    paused: false,               // freeze-frame: the world stops, the mouse still looks
     running: false
   };
 
@@ -115,6 +116,7 @@
       if (e.code === 'Tab') { e.preventDefault(); togglePanel(); return; }
       if (e.code === 'KeyR') { resetObserver(); return; }
       if (e.code === 'KeyH') { toggleHelp(); return; }
+      if (e.code === 'KeyP' || e.code === 'Pause') { togglePause(); return; }
       const a = CODE[e.code];
       if (a) {
         if (overlayUp()) begin();                    // just walking gets you in
@@ -504,6 +506,12 @@
   function togglePanel() { hud.panel.classList.toggle('is-open'); }
   function toggleHelp() { hud.help.classList.toggle('is-open'); }
 
+  /* Pause the time-evolution of the world, while leaving the mouse free to keep exploring. */
+  function togglePause() {
+    S.paused = !S.paused;
+    hud.paused.classList.toggle('is-on', S.paused);
+  }
+
   function syncControls() {
     for (const k in S.fx) {
       const el = document.getElementById('fx-' + k);
@@ -629,6 +637,7 @@
       panel: document.getElementById('panel'),
       help: document.getElementById('help'),
       galilean: document.getElementById('galilean'),
+      paused: document.getElementById('paused'),
       spectrum: document.getElementById('spectrum'),
       marker: document.getElementById('marker'),
       speed: document.getElementById('v-speed'),
@@ -662,9 +671,12 @@
 
     let last = performance.now(), acc = 0, frames = 0, hudAcc = 0;
     function frame(now) {
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      frames++; acc += dt; hudAcc += dt;
+      const real = Math.min(0.05, (now - last) / 1000);
+      last = now; // even while paused, or resuming would jump
+      // Pausing is achieved by stepping the world by a zero time increment.
+      // The frame is still drawn, so looking around keeps working.
+      const dt = S.paused ? 0 : real;
+      frames++; acc += real; hudAcc += real;
 
       const kin = step(dt);
       if (S.groundAdaptive) {
